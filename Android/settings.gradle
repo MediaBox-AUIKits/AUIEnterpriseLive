@@ -1,0 +1,32 @@
+include ':app'
+rootProject.name = "AliInteractionLiveDemo-Android"
+//
+//include(':AUIInteractionLiveRoom')
+//project(':AUIInteractionLiveRoom').projectDir = new File("AUIInteractionLiveRoom")
+//
+//include(':AUIInteractionCore')
+//project(':AUIInteractionCore').projectDir = new File("AUIInteractionCore")
+//
+//include(':AUIInteractionBusiness:AUIPlayer')
+//project(':AUIInteractionBusiness:AUIPlayer').projectDir = new File("AUIInteractionBusiness/AUIPlayer")
+//
+//include(':AUIInteractionBusiness:AUIMessage')
+//project(':AUIInteractionBusiness:AUIMessage').projectDir = new File("AUIInteractionBusiness/AUIMessage")
+
+def debuggerPath = hasProperty('debugger.path') ? getProperty('debugger.path') : null
+if (debuggerPath != null && new File(debuggerPath).exists()) {
+    include(':debugger')
+    project(':debugger').projectDir = new File(debuggerPath)
+}
+include ':AUICore'
+include ':AUIEnterpriseLive'
+include ':AUICore:AUIPlayer'
+include ':AUICore:AUIMessage'
+include ':AUICore:AUIAppServer'
+include ':AUICore:AUIPusher'
+include ':AUICore:AUIBeauty'
+include ':AUIUikit:AUIBarrageKit'
+include ':AUIUikit:AUIPlayerKit'
+include ':AUIUikit:AUILikeKit'
+include ':AUIUikit:AUIBaseKit'
+include ':AUIUikit:AUIEnterpriseKit'
