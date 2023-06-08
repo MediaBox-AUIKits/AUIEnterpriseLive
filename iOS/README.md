@@ -63,7 +63,7 @@ target '你的App target' do
     pod 'AliVCSDK_PremiumLive', '~> 1.8.0'
     
     # 互动SDK
-    pod 'AlivcInteraction', '~> 1.2.0'
+    pod 'AlivcInteraction', '~> 1.1.0'
 
     # 基础UI组件
     pod 'AUIFoundation/All', :path => "../AUIEnterpriseLive/AUIBaseKits/AUIFoundation/"
