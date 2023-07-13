@@ -42,8 +42,8 @@ static NSString * const kLiveServiceDomainString = @"https://appserverjava.h5vid
     [AUIRoomAppServer setServiceUrl:kLiveServiceDomainString];
     
     // 初始化SDK
+    [AlivcBase setIntegrationWay:@"aui-live-enterprise"];
     [AlivcLiveBase registerSDK];
-    [AlivcBase setIntegrationWay:@"aui-live-interaction"];
 
 #if DEBUG
     [AlivcLiveBase setLogLevel:AlivcLivePushLogLevelDebug];
