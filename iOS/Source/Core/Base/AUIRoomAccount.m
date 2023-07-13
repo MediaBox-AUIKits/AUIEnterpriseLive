@@ -7,6 +7,7 @@
 
 #import <UIKit/UIKit.h>
 #import "AUIRoomAccount.h"
+#import "AUIMessageService.h"
 
 @implementation AUIRoomAccount
 
@@ -19,11 +20,7 @@
 }
 
 + (NSString *)deviceId {
-    static NSString * _deviceId = nil;
-    if (!_deviceId) {
-        _deviceId = [[UIDevice currentDevice] identifierForVendor].UUIDString;
-    }
-    return _deviceId;
+    return AUIMessageConfig.deviceId;
 }
 
 @end

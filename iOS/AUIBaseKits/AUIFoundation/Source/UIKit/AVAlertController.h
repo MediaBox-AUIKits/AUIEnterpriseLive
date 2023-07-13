@@ -26,6 +26,15 @@ NS_ASSUME_NONNULL_BEGIN
                vc:(nullable UIViewController *)vc
       onCompleted:(void(^)(NSString *input, BOOL isCancel))completed;
 
++ (void)showInput:(nullable NSString *)inputTitle1
+      inputTitle2:(nullable NSString *)inputTitle2
+            title:(nullable NSString *)title
+          message:(nullable NSString *)message
+          okTitle:(nullable NSString *)okTitle
+      cancelTitle:(nullable NSString *)cancelTitle
+               vc:(nullable UIViewController *)vc
+      onCompleted:(void(^)(NSString *input1, NSString *input2))completed;
+
 + (void)showWithTitle:(nullable NSString *)title
               message:(NSString *)message
            needCancel:(BOOL)needCancel

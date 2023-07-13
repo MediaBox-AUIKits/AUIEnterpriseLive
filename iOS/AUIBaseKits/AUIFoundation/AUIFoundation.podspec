@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'AUIFoundation'
-  s.version          = '6.0.0'
+  s.version          = '6.1.0'
   s.summary          = 'A short description of AUIFoundation.'
 
 # This description is used to generate tags and improve search results.
@@ -35,10 +35,10 @@ TODO: Add long description of the pod here.
 
   s.subspec 'All' do |ss|
     ss.resource = 'Resources/AUIFoundation.bundle'
-    ss.source_files = 'Class/**/*.{h,m,mm}'
+    ss.source_files = 'Source/**/*.{h,m,mm}'
   end 
 
   # s.subspec 'Base' do |ss|
-  #   ss.source_files = 'Class/**/*.{h,m,mm}'
+  #   ss.source_files = 'Source/**/*.{h,m,mm}'
   # end 
 end

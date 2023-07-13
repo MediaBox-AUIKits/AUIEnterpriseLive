@@ -41,9 +41,10 @@ static NSString * const kLiveServiceDomainString = @"https://appserverjava.h5vid
     // 设置AppServer地址
     [AUIRoomAppServer setServiceUrl:kLiveServiceDomainString];
     
-    // 注册SDK
+    // 初始化SDK
     [AlivcLiveBase registerSDK];
-    
+    [AlivcBase setIntegrationWay:@"aui-live-interaction"];
+
 #if DEBUG
     [AlivcLiveBase setLogLevel:AlivcLivePushLogLevelDebug];
     [AlivcLiveBase setLogPath:NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject maxPartFileSizeInKB:1024*100];

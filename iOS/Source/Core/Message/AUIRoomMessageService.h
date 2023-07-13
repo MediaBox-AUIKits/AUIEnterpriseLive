@@ -6,7 +6,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "AUIRoomMessageModel.h"
+#import "AUIMessageService.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -18,98 +18,86 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSString *)groupId;
 
 /**
- * 收到自定义消息
+ * 收到PV更新
  */
-- (void)onCustomMessageReceived:(AUIRoomMessageModel *)message;
+- (void)onPVReceived:(AUIMessageModel *)message;
+
+/**
+ * 收到评论消息
+ */
+- (void)onCommentReceived:(AUIMessageModel *)message;
 
 /**
  * 收到点赞消息
  */
-- (void)onLikeReceived:(AUIRoomMessageModel *)message;
+- (void)onLikeReceived:(AUIMessageModel *)message;
+
+/**
+ * 收到其他信令
+ */
+- (void)onCommandReceived:(AUIMessageModel *)message;
 
 /**
  * 加入消息组
  */
-- (void)onJoinGroup:(AUIRoomMessageModel *)message;
+- (void)onJoinGroup:(AUIMessageModel *)message;
 
 /**
  * 离开消息组
  */
-- (void)onLeaveGroup:(AUIRoomMessageModel *)message;
+- (void)onLeaveGroup:(AUIMessageModel *)message;
 
 /**
  * 禁言群组
  */
-- (void)onMuteGroup:(AUIRoomMessageModel *)message;
+- (void)onMuteGroup:(AUIMessageModel *)message;
 
 /**
  * 取消禁言群组
  */
-- (void)onCancelMuteGroup:(AUIRoomMessageModel *)message;
-
-/**
- * 禁言用户
- */
-- (void)onMuteUser:(AUIRoomMessageModel *)message;
-
-/**
- * 取消禁言用户
- */
-- (void)onCancelMuteUser:(AUIRoomMessageModel *)message;
+- (void)onCancelMuteGroup:(AUIMessageModel *)message;
 
 @end
 
 
-@protocol AUIRoomMessageServiceAction <NSObject>
+typedef void(^AUIRoomMessageCallback)(NSError * _Nullable error);
 
-- (void)joinGroup:(NSString *)groupID
-        extension:(nullable NSString *)userExtension
-        onSuccess:(void (^)(void))onSuccess
-        onFailure:(void (^)(NSError *error))onFailure;
-
-- (void)leaveGroup:(NSString *)groupID
-          onSuccess:(void (^)(void))onSuccess
-          onFailure:(void (^)(NSError *error))onFailure;
-
-- (void)muteAll:(NSString *)groupID
-      onSuccess:(void (^)(void))onSuccess
-      onFailure:(void (^)(NSError* error))onFailure;
-
-- (void)cancelMuteAll:(NSString *)groupID
-            onSuccess:(void (^)(void))onSuccess
-            onFailure:(void (^)(NSError* error))onFailure;
-
-- (void)queryMuteAll:(NSString *)groupID
-          onSuccess:(void (^)(BOOL isMuteAll))onSuccess
-          onFailure:(void (^)(NSError * error))onFailure;
-
-- (void)listMuteUsers:(NSString *)groupID
-            onSuccess:(void (^)(NSArray<NSString *> *ids))onSuccess
-            onFailure:(void (^)(NSError * error))onFailure;
-
--(void)sendLike:(NSString *)groupID
-          count:(NSUInteger)count
-      onSuccess:(void (^)(void))onSuccess
-      onFailure:(void (^)(NSError * error))onFailure;
-
-
-- (void)sendTextMessage:(NSString *)groupID
-                userIDs:(NSArray *)userIDs
-                message:(NSString *)message
-                   type:(AUIRoomMessageType)type
-          skipMuteCheck:(BOOL)skipMuteCheck
-              skipAudit:(BOOL)skipAudit
-              onSuccess:(void (^)(void))onSuccess
-              onFailure:(void (^)(NSError * error))onFailure;
-
-@end
-
-@protocol AUIRoomMessageServiceProtocol <AUIRoomMessageServiceAction>
+@protocol AUIRoomMessageServiceProtocol
 
 - (void)login:(void(^)(BOOL))completed;
 - (void)logout;
+
 - (void)addObserver:(id<AUIRoomMessageServiceObserver>)observer;
 - (void)removeObserver:(id<AUIRoomMessageServiceObserver>)observer;
+
+- (void)joinGroup:(NSString *)groupID
+        completed:(AUIMessageDefaultCallback _Nullable)completed;
+
+- (void)leaveGroup:(NSString *)groupID
+         completed:(AUIMessageDefaultCallback _Nullable)completed;
+
+- (void)muteAll:(NSString *)groupID
+      completed:(AUIMessageDefaultCallback _Nullable)completed;
+
+- (void)cancelMuteAll:(NSString *)groupID
+            completed:(AUIMessageDefaultCallback _Nullable)completed;
+
+- (void)queryMuteAll:(NSString *)groupID
+           completed:(void (^)(BOOL, NSError * _Nullable))completed;
+
+- (void)sendLike:(NSString *)groupID
+           count:(NSUInteger)count
+       completed:(AUIMessageDefaultCallback _Nullable)completed;
+
+- (void)sendComment:(NSString *)groupID
+            comment:(NSDictionary *)comment
+          completed:(AUIMessageDefaultCallback)completed;
+
+- (void)sendCommand:(NSInteger)type
+               data:(id<AUIMessageDataProtocol> _Nullable)data
+            groupID:(NSString * _Nullable)groupID
+         receiverId:(NSString * _Nullable)receiverId
+          completed:(AUIMessageDefaultCallback _Nullable)completed;
 
 @end
 
@@ -119,10 +107,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface AUIRoomMessageService : NSObject <AUIRoomMessageServiceProtocol>
 
-
-
-@end
 
 NS_ASSUME_NONNULL_END

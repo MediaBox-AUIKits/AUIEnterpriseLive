@@ -15,6 +15,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSString *)av_MD5;
 
+- (NSString *)av_sha1;
+
+- (NSDictionary *)av_jsonDict;
+
 @end
 
 NS_ASSUME_NONNULL_END

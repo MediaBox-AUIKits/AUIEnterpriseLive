@@ -22,6 +22,8 @@ typedef void (^AVTraitCollectionDidChangedHandler)(void);
 
 @property (nonatomic, assign, class, readonly) BOOL av_isIphoneX;  // 是否为刘海屏
 @property (nonatomic, assign, class, readonly) UIEdgeInsets av_windowSafeArea;  // 窗口安全区域
+@property (nonatomic, assign, class, readonly) CGFloat av_safeTop;
+@property (nonatomic, assign, class, readonly) CGFloat av_safeBottom;
 
 
 @property (nonatomic, assign) CGFloat av_top;
@@ -48,7 +50,7 @@ typedef void (^AVTraitCollectionDidChangedHandler)(void);
 
 @end
 
-#define AVSafeTop [UIView av_windowSafeArea].top
-#define AVSafeBottom [UIView av_windowSafeArea].bottom
+#define AVSafeTop UIView.av_safeTop
+#define AVSafeBottom UIView.av_safeBottom
 
 NS_ASSUME_NONNULL_END

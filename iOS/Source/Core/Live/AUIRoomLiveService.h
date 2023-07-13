@@ -8,9 +8,19 @@
 #import <Foundation/Foundation.h>
 #import "AUIRoomUser.h"
 #import "AUIRoomLiveModel.h"
-#import "AUIRoomMessageModel.h"
+#import "AUIRoomMessageService.h"
 
 NS_ASSUME_NONNULL_BEGIN
+
+@interface AUIRoomGiftModel : NSObject<AUIMessageDataProtocol>
+
+@property (nonatomic, copy) NSString *giftId;
+@property (nonatomic, copy) NSString *name;
+@property (nonatomic, copy) NSString *desc;
+@property (nonatomic, copy) NSString *imageUrl;
+
+@end
+
 
 @interface AUIRoomLiveService : NSObject
 
@@ -38,10 +48,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)muteAll:(nullable void(^)(BOOL))completed;
 - (void)cancelMuteAll:(nullable void(^)(BOOL))completed;
 
-// 被主播禁言
-@property (assign, nonatomic, readonly) BOOL isMuteByAuchor;
-- (void)queryMuteByAnchor:(nullable void (^)(BOOL))completed;
-
 // 公告
 @property (copy, nonatomic, readonly) NSString *notice;
 - (void)updateNotice:(NSString *)notice completed:(nullable void(^)(BOOL))completed;
@@ -62,9 +68,8 @@ NS_ASSUME_NONNULL_BEGIN
 // 弹幕
 - (void)sendComment:(NSString *)comment completed:(nullable void(^)(BOOL))completed;
 
-// 自定义消息
-- (void)sendMessage:(nullable NSDictionary *)content type:(AUIRoomMessageType)type uids:(nullable NSArray<NSString *> *)uids skipMuteCheck:(BOOL)skipMuteCheck skipAudit:(BOOL)skipAudit completed:(nullable void(^)(BOOL))completed;
-- (void)sendData:(nullable id<AUIRoomCustomMessageData>)data type:(AUIRoomMessageType)type uids:(nullable NSArray<NSString *> *)uids skipMuteCheck:(BOOL)skipMuteCheck skipAudit:(BOOL)skipAudit completed:(nullable void(^)(BOOL))completed;
+// 发送信令（自定义）
+- (void)sendData:(nullable id<AUIMessageDataProtocol>)data type:(NSInteger)type receiverId:(nullable NSString *)receiverId completed:(nullable void(^)(BOOL))completed;
 
 
 // 申请/响应连麦
@@ -83,13 +88,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)updateLinkMicJoinList:(nullable NSArray<AUIRoomLiveLinkMicJoinInfoModel *> *)joinList completed:(nullable void(^)(BOOL))completed;
 
 // 房间事件
-@property (nonatomic, copy) void (^onReceivedCustomMessage)(AUIRoomMessageModel *message);
+@property (nonatomic, copy) void (^onReceivedCustomMessage)(AUIMessageModel *message);
 @property (nonatomic, copy) void (^onReceivedComment)(AUIRoomUser *sender, NSString *content);
 @property (nonatomic, copy) void (^onReceivedStartLive)(AUIRoomUser *sender);
 @property (nonatomic, copy) void (^onReceivedStopLive)(AUIRoomUser *sender);
 @property (nonatomic, copy) void (^onReceivedLike)(AUIRoomUser *sender, NSInteger likeCount);
-@property (nonatomic, copy) void (^onReceivedPV)(AUIRoomUser *sender, NSInteger pv);
-@property (nonatomic, copy) void (^onReceivedJoinGroup)(AUIRoomUser *sender, NSDictionary *stat);
+@property (nonatomic, copy) void (^onReceivedPV)(NSInteger pv);
 @property (nonatomic, copy) void (^onReceivedLeaveGroup)(AUIRoomUser *sender, NSDictionary *stat);
 @property (nonatomic, copy) void (^onReceivedMuteAll)(BOOL isMuteAll);
 @property (nonatomic, copy) void (^onReceivedNoticeUpdate)(NSString *notice);

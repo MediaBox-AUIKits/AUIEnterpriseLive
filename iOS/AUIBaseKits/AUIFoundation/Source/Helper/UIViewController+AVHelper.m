@@ -9,15 +9,14 @@
 
 @implementation UIViewController (AVHelper)
 
-- (BOOL)av_presentFullScreenViewController:(UIViewController *)viewControllerToPresent animated:(BOOL)flag completion:(void (^)(void))completion {
+- (void)av_presentFullScreenViewController:(UIViewController *)viewControllerToPresent animated:(BOOL)flag completion:(void (^)(void))completion {
     if (!viewControllerToPresent) {
-        return NO;
+        return;
     }
     viewControllerToPresent.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
     viewControllerToPresent.modalPresentationStyle = UIModalPresentationFullScreen;
     viewControllerToPresent.modalPresentationCapturesStatusBarAppearance = YES;
-    [self presentViewController:viewControllerToPresent animated:YES completion:nil];
-    return YES;
+    [self presentViewController:viewControllerToPresent animated:flag completion:completion];
 }
 
 - (void)av_displayChildViewController:(UIViewController *)childViewController onView:(UIView *)parentView {

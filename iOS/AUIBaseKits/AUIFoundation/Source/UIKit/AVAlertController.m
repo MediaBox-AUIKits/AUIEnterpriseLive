@@ -72,6 +72,34 @@
     [vc presentViewController:alertController animated:true completion:nil];
 }
 
++ (void)showInput:(NSString *)inputTitle1
+      inputTitle2:(NSString *)inputTitle2
+            title:(NSString *)title
+          message:(NSString *)message
+          okTitle:(NSString *)okTitle
+      cancelTitle:(NSString *)cancelTitle
+               vc:(UIViewController *)vc
+      onCompleted:(void(^)(NSString *input1, NSString *input2))completed {
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:title message:message preferredStyle:UIAlertControllerStyleAlert];
+    [alertController addAction:[UIAlertAction actionWithTitle:okTitle ?: AVGetString(@"OK", @"AUIFoundation") style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action){
+        UITextField *titleTextField = alertController.textFields.firstObject;
+        UITextField *titleTextField2 = alertController.textFields.lastObject;
+        if (completed) {
+            completed(titleTextField.text, titleTextField2.text);
+        }
+    }]];
+    [alertController addAction:[UIAlertAction actionWithTitle:cancelTitle ?: AVGetString(@"Cancel", @"AUIFoundation") style:UIAlertActionStyleDefault handler:nil]];
+    [alertController addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
+        textField.placeholder = inputTitle1;
+    }];
+    [alertController addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
+        textField.placeholder = inputTitle2;
+    }];
+    
+    vc = vc ?: UIViewController.av_topViewController;
+    [vc presentViewController:alertController animated:true completion:nil];
+}
+
 
 + (void)showWithTitle:(NSString *)title message:(NSString *)message needCancel:(BOOL)needCancel onCompleted:(void(^)(BOOL isCanced))completed {
     [self showWithTitle:title message:message cancelTitle:needCancel?AUIFoundationLocalizedString(@"Cancel"):nil okTitle:AUIFoundationLocalizedString(@"OK") onCompleted:completed];

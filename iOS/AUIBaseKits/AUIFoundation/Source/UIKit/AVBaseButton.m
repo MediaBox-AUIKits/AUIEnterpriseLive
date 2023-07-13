@@ -15,6 +15,7 @@
 @property (nonatomic, strong) UIImageView *imageView;
 @property (nonatomic, strong) UILabel *titleLabel;
 
+@property (nonatomic, strong) NSMutableDictionary<NSNumber *, NSString *> *titles;
 @property (nonatomic, strong) NSMutableDictionary<NSNumber *, UIColor *> *colors;
 @property (nonatomic, strong) NSMutableDictionary<NSNumber *, UIImage *> *images;
 @end
@@ -37,6 +38,7 @@
     _titleLabel.textAlignment = NSTextAlignmentCenter;
     _imageView = [UIImageView new];
     _imageView.contentMode = UIViewContentModeScaleAspectFit;
+    _titles = @{}.mutableCopy;
     _colors = @{}.mutableCopy;
     _images = @{}.mutableCopy;
     _spacing = 2.0;
@@ -73,6 +75,26 @@
     return self.titleLabel.font;
 }
 
+- (void) updateTitle {
+    NSString *title = _titles[@(_state)];
+    if (!title) {
+        title = self.title;
+    }
+    _titleLabel.text = title;
+}
+- (void) setTitle:(NSString *)title {
+    _titles[@(AVBaseButtonStateNormal)] = title;
+    [self updateTitle];
+}
+- (void) setDisabledTitle:(NSString *)disabledTitle {
+    _titles[@(AVBaseButtonStateDisabled)] = disabledTitle;
+    [self updateTitle];
+}
+- (void) setSelectedTitle:(NSString *)selectedTitle {
+    _titles[@(AVBaseButtonStateSelected)] = selectedTitle;
+    [self updateTitle];
+}
+
 - (void) updateColor {
     UIColor *color = _colors[@(_state)];
     if (!color) {
@@ -96,6 +118,7 @@
 
 - (void) setState:(AVBaseButtonState)state {
     _state = state;
+    [self updateTitle];
     [self updateColor];
     [self updateImage];
 }
@@ -243,11 +266,16 @@
     return (self.state == AVBaseButtonStateSelected);
 }
 
-- (void) setTitle:(NSString *)title {
-    _titleLabel.text = title;
-}
 - (NSString *) title {
-    return _titleLabel.text;
+    return _titles[@(AVBaseButtonStateNormal)];
+}
+
+- (NSString *) disabledTitle {
+    return _titles[@(AVBaseButtonStateDisabled)];
+}
+
+- (NSString *)selectedTitle {
+    return _titles[@(AVBaseButtonStateSelected)];
 }
 
 - (UIColor *) color {

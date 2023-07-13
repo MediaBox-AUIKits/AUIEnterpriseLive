@@ -58,7 +58,7 @@
         return iPhoneX;
     }
     if (@available(iOS 11.0, *)) {
-        UIWindow *mainWindow = [[UIApplication sharedApplication] keyWindow];
+        UIWindow *mainWindow = [[UIApplication sharedApplication].delegate window];
         if (mainWindow.safeAreaInsets.bottom > 0.0) {
             iPhoneX = YES;
         }
@@ -71,12 +71,19 @@
         return UIEdgeInsetsZero;
     }
     if (@available(iOS 11.0, *)) {
-        UIWindow *mainWindow = [[UIApplication sharedApplication] keyWindow];
+        UIWindow *mainWindow = [[UIApplication sharedApplication].delegate window];
         return mainWindow.safeAreaInsets;
     }
     return UIEdgeInsetsZero;
 }
 
++ (CGFloat)av_safeTop {
+    return self.av_windowSafeArea.top;
+}
+
++ (CGFloat)av_safeBottom {
+    return self.av_windowSafeArea.bottom;
+}
 
 - (CGFloat)av_left
 {

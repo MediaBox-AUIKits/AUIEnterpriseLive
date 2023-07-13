@@ -41,6 +41,8 @@ typedef void(^AVBaseButtonAction)(AVBaseButton *btn);
 @property (nonatomic, assign) BOOL selected;
 
 @property (nonatomic, copy) NSString *title;
+@property (nonatomic, copy) NSString *disabledTitle;
+@property (nonatomic, copy) NSString *selectedTitle;
 @property (nonatomic, strong) UIFont *font;
 
 @property (nonatomic, copy) UIColor *color;
