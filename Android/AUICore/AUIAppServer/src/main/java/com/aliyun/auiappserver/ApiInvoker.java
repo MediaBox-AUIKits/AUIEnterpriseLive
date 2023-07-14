@@ -1,8 +1,8 @@
 package com.aliyun.auiappserver;
 
-import com.aliyun.aliinteraction.base.Callback;
+import com.alivc.auimessage.listener.InteractionCallback;
 
 public interface ApiInvoker<T> {
 
-    void invoke(Callback<T> callback);
+    void invoke(InteractionCallback<T> callback);
 }

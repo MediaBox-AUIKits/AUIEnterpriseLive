@@ -2,7 +2,6 @@ package com.aliyun.aliinteraction.uikit.uibase.util.immersionbar;
 
 /**
  * Bar相关信息
- *
  */
 public class BarProperties {
 

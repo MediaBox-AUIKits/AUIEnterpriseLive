@@ -3,7 +3,7 @@ package com.aliyun.aliinteraction.uikit.core;
 
 import android.Manifest;
 
-import com.aliyun.aliinteraction.common.roombase.Const;
+import com.alivc.auicommon.common.roombase.Const;
 
 /**
  * @author puke

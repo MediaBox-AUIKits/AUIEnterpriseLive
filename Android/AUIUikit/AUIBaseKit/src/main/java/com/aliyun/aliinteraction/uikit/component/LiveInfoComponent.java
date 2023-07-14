@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -13,8 +14,8 @@ import com.aliyun.aliinteraction.uikit.R;
 import com.aliyun.aliinteraction.uikit.core.BaseComponent;
 import com.aliyun.aliinteraction.uikit.core.ComponentHolder;
 import com.aliyun.aliinteraction.uikit.core.IComponent;
-import com.aliyun.auiappserver.model.LiveModel;
 import com.aliyun.aliinteraction.uikit.uibase.util.AppUtil;
+import com.aliyun.auiappserver.model.LiveModel;
 import com.aliyun.auipusher.LiveContext;
 
 import org.json.JSONException;

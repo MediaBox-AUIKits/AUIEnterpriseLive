@@ -9,7 +9,7 @@ import java.util.Date;
  * @author puke
  * @version 2022/10/28
  */
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AppServerToken implements Serializable {
 
     public int code;

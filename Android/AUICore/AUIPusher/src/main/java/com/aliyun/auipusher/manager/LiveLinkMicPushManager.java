@@ -18,8 +18,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.alibaba.fastjson.JSON;
+import com.alivc.auicommon.common.base.AppContext;
+import com.alivc.auicommon.common.base.log.Logger;
+import com.alivc.auicommon.common.base.util.CollectionUtil;
+import com.alivc.auicommon.core.utils.AssetUtil;
 import com.alivc.component.custom.AlivcLivePushCustomFilter;
 import com.alivc.live.annotations.AlivcLiveMode;
+import com.alivc.live.annotations.AlivcLivePushKickedOutType;
 import com.alivc.live.player.AlivcLivePlayConfig;
 import com.alivc.live.player.AlivcLivePlayer;
 import com.alivc.live.player.annotations.AlivcLivePlayError;
@@ -41,13 +46,9 @@ import com.alivc.live.pusher.AlivcLivePusher;
 import com.alivc.live.pusher.AlivcLiveTranscodingConfig;
 import com.alivc.live.pusher.AlivcPreviewDisplayMode;
 import com.alivc.live.pusher.AlivcPreviewOrientationEnum;
-import com.aliyun.aliinteraction.beauty.BeautyFactory;
-import com.aliyun.aliinteraction.beauty.BeautyInterface;
-import com.aliyun.aliinteraction.beauty.constant.BeautySDKType;
-import com.aliyun.aliinteraction.common.base.AppContext;
-import com.aliyun.aliinteraction.common.base.log.Logger;
-import com.aliyun.aliinteraction.common.base.util.CollectionUtil;
-import com.aliyun.aliinteraction.core.utils.AssetUtil;
+import com.alivc.auibeauty.beauty.BeautyFactory;
+import com.alivc.auibeauty.beauty.BeautyInterface;
+import com.alivc.auibeauty.beauty.constant.BeautySDKType;
 import com.aliyun.auipusher.LivePushGlobalConfig;
 import com.aliyun.auipusher.config.AliLivePusherOptions;
 import com.aliyun.auipusher.config.CanvasScale;
@@ -71,37 +72,237 @@ public class LiveLinkMicPushManager implements AlivcLiveBaseListener {
 
     private static final String TAG = LiveLinkMicPushManager.class.getSimpleName();
 
-    private AlivcLivePusher mALivcLivePusher;
-
-    private boolean isStartPush = false;
-    private boolean isPause = false;
-
-    // 当前直播推流地址
-    private String mCurrentPublishUrl;
     private final Context mContext;
-
-    private Callback callback;
-    private int mCameraId = Camera.CameraInfo.CAMERA_FACING_FRONT;
-    private SurfaceHolder.Callback surfaceViewCallback;
-    private FrameLayout renderView;
     private final Map<String, MultiAlivcLivePlayer> mAlivcLivePlayerMap = new HashMap<>();
-    public static final String ARTC = "artc://";
-    private FrameLayout mAudienceFrameLayout;
-    private AlivcLivePushConfig mAlivcLivePushConfig;
     //多人连麦混流
     private final ArrayList<AlivcLiveMixStream> mMultiInteractLiveMixStreamsArray = new ArrayList<>();
     //多人连麦 Config
     private final AlivcLiveTranscodingConfig mMixInteractLiveTranscodingConfig = new AlivcLiveTranscodingConfig();
-    private MultiInteractLivePushPullListener mMultiInteractLivePushPullListener;
     private final int mAudiencelayoutArgs = 180;//设置布局样式，先默认180dp
+
+    AlivcLivePushErrorListener pushErrorListener = new AlivcLivePushErrorListener() {
+        @Override
+        public void onSystemError(AlivcLivePusher livePusher, AlivcLivePushError error) {
+            if (error != null) {
+                Logger.e(TAG, error.toString());
+                reportPushLowPerformance(error);
+            }
+        }
+
+        @Override
+        public void onSDKError(AlivcLivePusher livePusher, AlivcLivePushError error) {
+            if (error != null) {
+                Logger.e(TAG, error.toString());
+                reportPushLowPerformance(error);
+            }
+        }
+    };
+
+    private AlivcLivePusher mALivcLivePusher;
+    private boolean isStartPush = false;
+    private boolean isPause = false;
+    // 当前直播推流地址
+    private String mCurrentPublishUrl;
+    private Callback callback;
+
+    // region listener
+    AlivcLivePushInfoListener pushInfoListener = new AlivcLivePushInfoListener() {
+        @Override
+        public void onPreviewStarted(AlivcLivePusher alivcLivePusher) {
+            onEvent(LiveEvent.PREVIEW_STARTED);
+        }
+
+        @Override
+        public void onPreviewStopped(AlivcLivePusher alivcLivePusher) {
+            onEvent(LiveEvent.PREVIEW_STOPPED);
+        }
+
+        @Override
+        public void onPushStarted(AlivcLivePusher alivcLivePusher) {
+            onEvent(LiveEvent.PUSH_STARTED);
+        }
+
+        @Override
+        public void onPushPaused(AlivcLivePusher alivcLivePusher) {
+            onEvent(LiveEvent.PUSH_PAUSED);
+        }
+
+        @Override
+        public void onFirstFramePushed(AlivcLivePusher alivcLivePusher) {
+            onEvent(LiveEvent.FIRST_FRAME_PUSHED);
+        }
+
+        @Override
+        public void onPushResumed(AlivcLivePusher alivcLivePusher) {
+            onEvent(LiveEvent.PUSH_RESUMED);
+        }
+
+        @Override
+        public void onPushStopped(AlivcLivePusher alivcLivePusher) {
+            onEvent(LiveEvent.PUSH_STOPPED);
+        }
+
+        @Override
+        public void onPushRestarted(AlivcLivePusher alivcLivePusher) {
+
+        }
+
+        @Override
+        public void onFirstFramePreviewed(AlivcLivePusher alivcLivePusher) {
+            onEvent(LiveEvent.FIRST_FRAME_PREVIEWED);
+        }
+
+        @Override
+        public void onDropFrame(AlivcLivePusher alivcLivePusher, int i, int i1) {
+
+        }
+
+        @Override
+        public void onAdjustBitrate(AlivcLivePusher alivcLivePusher, int i, int i1) {
+
+        }
+
+        @Override
+        public void onAdjustFps(AlivcLivePusher alivcLivePusher, int curFps, int targetFps) {
+        }
+
+        @Override
+        public void onPushStatistics(AlivcLivePusher alivcLivePusher, AlivcLivePushStatsInfo info) {
+            Map<String, Object> extras = new HashMap<>();
+            extras.put("v_bitrate", info.getVideoUploadBitrate());
+            extras.put("a_bitrate", info.getAudioUploadBitrate());
+            onEvent(LiveEvent.UPLOAD_BITRATE_UPDATED, extras);
+        }
+
+        @Override
+        public void onSetLiveMixTranscodingConfig(AlivcLivePusher alivcLivePusher, boolean b, String s) {
+
+        }
+
+        @Override
+        public void onKickedOutByServer(AlivcLivePusher pusher, AlivcLivePushKickedOutType kickedOutType) {
+
+        }
+    };
+
+    AlivcLivePushNetworkListener pushNetworkListener = new AlivcLivePushNetworkListener() {
+        @Override
+        public void onNetworkPoor(AlivcLivePusher pusher) {
+            onEvent(LiveEvent.NETWORK_POOR);
+        }
+
+        @Override
+        public void onNetworkRecovery(AlivcLivePusher pusher) {
+            onEvent(LiveEvent.NETWORK_RECOVERY);
+        }
+
+        @Override
+        public void onReconnectStart(AlivcLivePusher pusher) {
+            onEvent(LiveEvent.RECONNECT_START);
+        }
+
+        @Override
+        public void onReconnectFail(AlivcLivePusher pusher) {
+            onEvent(LiveEvent.RECONNECT_FAIL);
+        }
+
+        @Override
+        public void onReconnectSucceed(AlivcLivePusher pusher) {
+            onEvent(LiveEvent.RECONNECT_SUCCESS);
+        }
+
+        @Override
+        public void onSendDataTimeout(AlivcLivePusher pusher) {
+        }
+
+        @Override
+        public void onConnectFail(AlivcLivePusher pusher) {
+            onEvent(LiveEvent.CONNECTION_FAIL);
+        }
+
+        @Override
+        public void onConnectionLost(AlivcLivePusher pusher) {
+            //推流已断开
+            onEvent(LiveEvent.CONNECTION_LOST);
+        }
+
+        @Override
+        public String onPushURLAuthenticationOverdue(AlivcLivePusher pusher) {
+            if (pusher != null) {
+                return pusher.getPushUrl();
+            }
+            return null;
+        }
+
+        @Override
+        public void onPushURLTokenWillExpire(AlivcLivePusher pusher) {
+
+        }
+
+        @Override
+        public void onPushURLTokenExpired(AlivcLivePusher pusher) {
+
+        }
+
+        @Override
+        public void onSendMessage(AlivcLivePusher pusher) {
+        }
+
+        @Override
+        public void onPacketsLost(AlivcLivePusher pusher) {
+        }
+    };
+
+    private int mCameraId = Camera.CameraInfo.CAMERA_FACING_FRONT;
+    private SurfaceHolder.Callback surfaceViewCallback;
+    private FrameLayout renderView;
+    private FrameLayout mAudienceFrameLayout;
+    private AlivcLivePushConfig mAlivcLivePushConfig;
+    private MultiInteractLivePushPullListener mMultiInteractLivePushPullListener;
     private BeautyInterface mBeautyManager;
     private boolean isBeautyEnable = true;
-
 
     public LiveLinkMicPushManager(Context context, AliLivePusherOptions aliLivePusherOptions) {
         mContext = context;
         init();
 //        initPlayer();
+    }
+
+    public static String getFilePath(Context context, String dir) {
+        String logFilePath = "";
+        //判断SD卡是否可用
+        if (MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
+            logFilePath = context.getExternalFilesDir(dir).getAbsolutePath();
+        } else {
+            //没内存卡就存机身内存
+            logFilePath = context.getFilesDir() + File.separator + dir;
+        }
+        File file = new File(logFilePath);
+        if (!file.exists()) {//判断文件目录是否存在
+            file.mkdirs();
+        }
+
+        //Set log folder path in 4.4.0+ version
+        if (false) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            String logFileName = "live_pusher_" + sdf.format(new Date()) + "_" + String.valueOf(System.currentTimeMillis()) + ".log";
+            logFilePath += File.separator + logFileName;
+        }
+
+        Log.d(TAG, "log filePath====>" + logFilePath);
+        return logFilePath;
+    }
+
+    public static AlivcPreviewDisplayMode convertToAlivcPreviewDisplayMode(@CanvasScale.Mode int mode) {
+        switch (mode) {
+            case CanvasScale.Mode.SCALE_FILL:
+                return AlivcPreviewDisplayMode.ALIVC_LIVE_PUSHER_PREVIEW_SCALE_FILL;
+            case CanvasScale.Mode.ASPECT_FIT:
+                return AlivcPreviewDisplayMode.ALIVC_LIVE_PUSHER_PREVIEW_ASPECT_FIT;
+            default:
+            case CanvasScale.Mode.ASPECT_FILL:
+                return AlivcPreviewDisplayMode.ALIVC_LIVE_PUSHER_PREVIEW_ASPECT_FILL;
+        }
     }
 
     private void init() {
@@ -150,27 +351,17 @@ public class LiveLinkMicPushManager implements AlivcLiveBaseListener {
 
         mALivcLivePusher.setCustomFilter(new AlivcLivePushCustomFilter() {
             @Override
-            public void customFilterCreate(long var1) {
-                Log.d(TAG, "customFilterCreate start-" + var1);
-
-                initBeautyManager(var1);
-
-                Log.d(TAG, "customFilterCreate end");
+            public void customFilterCreate() {
+                initBeautyManager();
             }
 
             @Override
-            public int customFilterProcess(int inputTexture, int textureWidth, int textureHeight, float[] textureMatrix, boolean isOES, long extra) {
+            public int customFilterProcess(int inputTexture, int textureWidth, int textureHeight, long extra) {
                 if (mBeautyManager == null) {
                     return inputTexture;
                 }
 
-                int ret = inputTexture;
-                if (mAlivcLivePushConfig != null && mAlivcLivePushConfig.getLivePushMode() == AlivcLiveMode.AlivcLiveInteractiveMode) {
-                    ret = mBeautyManager.onTextureInput(inputTexture, textureWidth, textureHeight, textureMatrix, isOES);
-                } else {
-                    ret = mBeautyManager.onTextureInput(inputTexture, textureWidth, textureHeight, textureMatrix, false);
-                }
-                return ret;
+                return mBeautyManager.onTextureInput(inputTexture, textureWidth, textureHeight);
             }
 
             @Override
@@ -192,31 +383,6 @@ public class LiveLinkMicPushManager implements AlivcLiveBaseListener {
             AssetUtil.copyAssetFileToSdCard(mContext, targetFileName, imageFilePath);
         }
         return imageFilePath;
-    }
-
-    public static String getFilePath(Context context, String dir) {
-        String logFilePath = "";
-        //判断SD卡是否可用
-        if (MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
-            logFilePath = context.getExternalFilesDir(dir).getAbsolutePath();
-        } else {
-            //没内存卡就存机身内存
-            logFilePath = context.getFilesDir() + File.separator + dir;
-        }
-        File file = new File(logFilePath);
-        if (!file.exists()) {//判断文件目录是否存在
-            file.mkdirs();
-        }
-
-        //Set log folder path in 4.4.0+ version
-        if (false) {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            String logFileName = "live_pusher_" + sdf.format(new Date()) + "_" + String.valueOf(System.currentTimeMillis()) + ".log";
-            logFilePath += File.separator + logFileName;
-        }
-
-        Log.d(TAG, "log filePath====>" + logFilePath);
-        return logFilePath;
     }
 
     public void setCallback(Callback callback) {
@@ -345,7 +511,6 @@ public class LiveLinkMicPushManager implements AlivcLiveBaseListener {
         return mCurrentPublishUrl;
     }
 
-
     /**
      * 暂停
      */
@@ -453,18 +618,6 @@ public class LiveLinkMicPushManager implements AlivcLiveBaseListener {
         }
     }
 
-    public static AlivcPreviewDisplayMode convertToAlivcPreviewDisplayMode(@CanvasScale.Mode int mode) {
-        switch (mode) {
-            case CanvasScale.Mode.SCALE_FILL:
-                return AlivcPreviewDisplayMode.ALIVC_LIVE_PUSHER_PREVIEW_SCALE_FILL;
-            case CanvasScale.Mode.ASPECT_FIT:
-                return AlivcPreviewDisplayMode.ALIVC_LIVE_PUSHER_PREVIEW_ASPECT_FIT;
-            default:
-            case CanvasScale.Mode.ASPECT_FILL:
-                return AlivcPreviewDisplayMode.ALIVC_LIVE_PUSHER_PREVIEW_ASPECT_FILL;
-        }
-    }
-
     /**
      * 开始预览
      */
@@ -507,7 +660,6 @@ public class LiveLinkMicPushManager implements AlivcLiveBaseListener {
     public void setMute(boolean mute) {
         mALivcLivePusher.setMute(mute);
     }
-
 
     /**
      * 切换摄像头
@@ -582,159 +734,6 @@ public class LiveLinkMicPushManager implements AlivcLiveBaseListener {
         }
     }
 
-    // region listener
-    AlivcLivePushInfoListener pushInfoListener = new AlivcLivePushInfoListener() {
-
-        @Override
-        public void onPreviewStarted(AlivcLivePusher alivcLivePusher) {
-            onEvent(LiveEvent.PREVIEW_STARTED);
-        }
-
-        @Override
-        public void onPreviewStopped(AlivcLivePusher alivcLivePusher) {
-            onEvent(LiveEvent.PREVIEW_STOPPED);
-        }
-
-        @Override
-        public void onPushStarted(AlivcLivePusher alivcLivePusher) {
-            onEvent(LiveEvent.PUSH_STARTED);
-        }
-
-        @Override
-        public void onPushPaused(AlivcLivePusher alivcLivePusher) {
-            onEvent(LiveEvent.PUSH_PAUSED);
-        }
-
-        @Override
-        public void onFirstFramePushed(AlivcLivePusher alivcLivePusher) {
-            onEvent(LiveEvent.FIRST_FRAME_PUSHED);
-        }
-
-        @Override
-        public void onPushResumed(AlivcLivePusher alivcLivePusher) {
-            onEvent(LiveEvent.PUSH_RESUMED);
-        }
-
-        @Override
-        public void onPushStopped(AlivcLivePusher alivcLivePusher) {
-            onEvent(LiveEvent.PUSH_STOPPED);
-        }
-
-        @Override
-        public void onPushRestarted(AlivcLivePusher alivcLivePusher) {
-
-        }
-
-        @Override
-        public void onFirstFramePreviewed(AlivcLivePusher alivcLivePusher) {
-            onEvent(LiveEvent.FIRST_FRAME_PREVIEWED);
-        }
-
-        @Override
-        public void onDropFrame(AlivcLivePusher alivcLivePusher, int i, int i1) {
-
-        }
-
-        @Override
-        public void onAdjustBitrate(AlivcLivePusher alivcLivePusher, int i, int i1) {
-
-        }
-
-        @Override
-        public void onAdjustFps(AlivcLivePusher alivcLivePusher, int curFps, int targetFps) {
-        }
-
-        @Override
-        public void onPushStatistics(AlivcLivePusher alivcLivePusher, AlivcLivePushStatsInfo info) {
-            Map<String, Object> extras = new HashMap<>();
-            extras.put("v_bitrate", info.getVideoUploadBitrate());
-            extras.put("a_bitrate", info.getAudioUploadBitrate());
-            onEvent(LiveEvent.UPLOAD_BITRATE_UPDATED, extras);
-        }
-
-        @Override
-        public void onSetLiveMixTranscodingConfig(AlivcLivePusher alivcLivePusher, boolean b, String s) {
-
-        }
-    };
-
-    AlivcLivePushNetworkListener pushNetworkListener = new AlivcLivePushNetworkListener() {
-        @Override
-        public void onNetworkPoor(AlivcLivePusher pusher) {
-            onEvent(LiveEvent.NETWORK_POOR);
-        }
-
-        @Override
-        public void onNetworkRecovery(AlivcLivePusher pusher) {
-            onEvent(LiveEvent.NETWORK_RECOVERY);
-        }
-
-        @Override
-        public void onReconnectStart(AlivcLivePusher pusher) {
-            onEvent(LiveEvent.RECONNECT_START);
-        }
-
-        @Override
-        public void onReconnectFail(AlivcLivePusher pusher) {
-            onEvent(LiveEvent.RECONNECT_FAIL);
-        }
-
-        @Override
-        public void onReconnectSucceed(AlivcLivePusher pusher) {
-            onEvent(LiveEvent.RECONNECT_SUCCESS);
-        }
-
-        @Override
-        public void onSendDataTimeout(AlivcLivePusher pusher) {
-        }
-
-        @Override
-        public void onConnectFail(AlivcLivePusher pusher) {
-            onEvent(LiveEvent.CONNECTION_FAIL);
-        }
-
-        @Override
-        public void onConnectionLost(AlivcLivePusher pusher) {
-            //推流已断开
-            onEvent(LiveEvent.CONNECTION_LOST);
-        }
-
-        @Override
-        public String onPushURLAuthenticationOverdue(AlivcLivePusher pusher) {
-            if (pusher != null) {
-                return pusher.getPushUrl();
-            }
-            return null;
-        }
-
-        @Override
-        public void onSendMessage(AlivcLivePusher pusher) {
-        }
-
-        @Override
-        public void onPacketsLost(AlivcLivePusher pusher) {
-        }
-    };
-
-    AlivcLivePushErrorListener pushErrorListener = new AlivcLivePushErrorListener() {
-
-        @Override
-        public void onSystemError(AlivcLivePusher livePusher, AlivcLivePushError error) {
-            if (error != null) {
-                Logger.e(TAG, error.toString());
-                reportPushLowPerformance(error);
-            }
-        }
-
-        @Override
-        public void onSDKError(AlivcLivePusher livePusher, AlivcLivePushError error) {
-            if (error != null) {
-                Logger.e(TAG, error.toString());
-                reportPushLowPerformance(error);
-            }
-        }
-    };
-
     private void reportPushLowPerformance(AlivcLivePushError error) {
         if (error.getCode() == AlivcLivePushError.ALIVC_PUSHER_ERROR_SDK_LIVE_PUSH_LOW_PERFORMANCE.getCode()) {
         }
@@ -755,11 +754,6 @@ public class LiveLinkMicPushManager implements AlivcLiveBaseListener {
 
     }
     // endregion listener
-
-    public interface Callback {
-
-        void onEvent(LiveEvent event, @Nullable Map<String, Object> extras);
-    }
 
     public void setLiveMixTranscodingConfig(String anchorId, String audience) {
         if (TextUtils.isEmpty(anchorId) && TextUtils.isEmpty(audience)) {
@@ -1052,15 +1046,13 @@ public class LiveLinkMicPushManager implements AlivcLiveBaseListener {
         return true;
     }
 
-    private void initBeautyManager(long glContext) {
+    private void initBeautyManager() {
         if (mBeautyManager == null) {
             Log.d(TAG, "initBeautyManager start");
-            if (mAlivcLivePushConfig.getLivePushMode() == AlivcLiveMode.AlivcLiveInteractiveMode) {
-                //互动模式下，美颜初始化
-                mBeautyManager = BeautyFactory.createBeauty(BeautySDKType.INTERACT_QUEEN, mContext);
-            }
+            // 从v6.2.0开始，基础模式下的美颜，和互动模式下的美颜，处理逻辑保持一致，即：QueenBeautyImpl；
+            mBeautyManager = BeautyFactory.createBeauty(BeautySDKType.QUEEN, mContext);
             // initialize in texture thread.
-            mBeautyManager.init(glContext);
+            mBeautyManager.init();
             mBeautyManager.setBeautyEnable(isBeautyEnable);
             mBeautyManager.switchCameraId(mCameraId);
             Log.d(TAG, "initBeautyManager end");
@@ -1072,6 +1064,11 @@ public class LiveLinkMicPushManager implements AlivcLiveBaseListener {
             mBeautyManager.release();
             mBeautyManager = null;
         }
+    }
+
+    public interface Callback {
+
+        void onEvent(LiveEvent event, @Nullable Map<String, Object> extras);
     }
 
     public static class MixItem {

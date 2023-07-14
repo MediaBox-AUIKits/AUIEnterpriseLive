@@ -3,11 +3,11 @@ package com.aliyun.aliinteraction.player;
 import android.content.Context;
 import android.view.SurfaceView;
 
-import com.aliyun.aliinteraction.common.base.EventHandler;
-import com.aliyun.aliinteraction.common.base.EventHandlerManager;
-import com.aliyun.aliinteraction.common.base.log.Logger;
-import com.aliyun.aliinteraction.common.base.network.NetworkAvailableManager;
-import com.aliyun.aliinteraction.common.base.network.OnNetworkAvailableChangeListener;
+import com.alivc.auicommon.common.base.EventHandler;
+import com.alivc.auicommon.common.base.EventHandlerManager;
+import com.alivc.auicommon.common.base.log.Logger;
+import com.alivc.auicommon.common.base.network.NetworkAvailableManager;
+import com.alivc.auicommon.common.base.network.OnNetworkAvailableChangeListener;
 import com.aliyun.aliinteraction.player.exposable.CanvasScale;
 import com.aliyun.player.bean.ErrorInfo;
 
@@ -129,12 +129,12 @@ public class LivePlayerServiceImpl extends EventHandlerManager<LivePlayerEventHa
         NetworkAvailableManager.instance().unregister(availableChangeListener);
     }
 
-    private void setNeedPlay(boolean needPlay) {
-        this.needPlay = needPlay;
-    }
-
     public boolean isNeedPlay() {
         return needPlay;
+    }
+
+    private void setNeedPlay(boolean needPlay) {
+        this.needPlay = needPlay;
     }
 
     // 懒加载处理, 使用时再获取

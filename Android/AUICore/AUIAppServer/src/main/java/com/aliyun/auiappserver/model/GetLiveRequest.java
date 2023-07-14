@@ -9,7 +9,7 @@ import java.io.Serializable;
  * @author puke
  * @version 2022/9/2
  */
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class GetLiveRequest implements Serializable {
 
     @JsonProperty("id")

@@ -14,14 +14,12 @@
         <com.aliyun.auienterprisekit.AliyunPlayerView
             android:id="@+id/video_view"
             android:layout_width="match_parent"
-            android:layout_height="210dp"
-            />
+            android:layout_height="210dp" />
 
         <RelativeLayout
             android:id="@+id/contain_layout"
             android:layout_width="match_parent"
-            android:layout_height="210dp"
-            >
+            android:layout_height="210dp">
 
             <RelativeLayout
                 android:id="@+id/playback_render_bg"
@@ -82,15 +80,14 @@
                 android:background="@drawable/ilr_not_start_bg"
                 android:visibility="gone" />
 
-            <com.aliyun.auienterprisekit.ChangeScreenModeComponet
+            <com.aliyun.auienterprisekit.ChangeScreenModeComponent
                 android:id="@+id/change_screen"
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:layout_alignParentRight="true"
                 android:layout_alignParentBottom="true"
                 android:layout_marginRight="16dp"
-                android:layout_marginBottom="17dp"
-                />
+                android:layout_marginBottom="17dp" />
 
 
             <!-- 直播播放控制 -->
@@ -200,9 +197,9 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@id/group_id"
                 android:layout_marginTop="-10dp"
+                android:layout_marginBottom="80dp"
                 android:paddingLeft="16dp"
                 android:paddingRight="16dp"
-                android:layout_marginBottom="80dp"
                 android:visibility="gone" />
 
 

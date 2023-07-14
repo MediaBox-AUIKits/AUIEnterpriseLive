@@ -8,9 +8,8 @@ import android.widget.RelativeLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.aliyun.aliinteraction.common.biz.exposable.enums.LiveStatus;
-import com.aliyun.aliinteraction.core.base.Actions;
-import com.aliyun.aliinteraction.model.Message;
+import com.alivc.auicommon.common.biz.exposable.enums.LiveStatus;
+import com.alivc.auicommon.core.base.Actions;
 import com.aliyun.aliinteraction.roompaas.message.listener.SimpleOnMessageListener;
 import com.aliyun.aliinteraction.roompaas.message.model.StartLiveModel;
 import com.aliyun.aliinteraction.uikit.core.BaseComponent;
@@ -19,6 +18,7 @@ import com.aliyun.aliinteraction.uikit.core.IComponent;
 import com.aliyun.auipusher.LiveContext;
 import com.aliyun.auipusher.SimpleLiveEventHandler;
 import com.aliyun.auipusher.config.LiveEvent;
+import com.alivc.auimessage.model.base.AUIMessageModel;
 
 import java.util.Map;
 
@@ -52,7 +52,6 @@ public class LiveContentLayerComponent extends RelativeLayout implements Compone
             }
         });
     }
-    
 
     @Override
     public IComponent getComponent() {
@@ -83,7 +82,7 @@ public class LiveContentLayerComponent extends RelativeLayout implements Compone
 
             getMessageService().addMessageListener(new SimpleOnMessageListener() {
                 @Override
-                public void onStartLive(Message<StartLiveModel> message) {
+                public void onStartLive(AUIMessageModel<StartLiveModel> message) {
                     setVisibility(VISIBLE);
                 }
             });

@@ -12,7 +12,6 @@ import java.util.Map;
 
 /**
  * 沉浸式参数信息
- *
  */
 public class BarParams implements Cloneable {
     /**
@@ -117,11 +116,6 @@ public class BarParams implements Cloneable {
     @ColorInt
     public int navigationBarColorTransform = Color.BLACK;
     /**
-     * 支持view变色
-     * The View map.
-     */
-    Map<View, Map<Integer, Integer>> viewMap = new HashMap<>();
-    /**
      * The View alpha.
      */
     @FloatRange(from = 0f, to = 1f)
@@ -178,7 +172,6 @@ public class BarParams implements Cloneable {
      * The Keyboard enable.
      */
     public boolean keyboardEnable = false;
-
     /**
      * 软键盘属性
      * The Keyboard mode.
@@ -205,6 +198,11 @@ public class BarParams implements Cloneable {
      * The Init enable.
      */
     public boolean barEnable = true;
+    /**
+     * 支持view变色
+     * The View map.
+     */
+    Map<View, Map<Integer, Integer>> viewMap = new HashMap<>();
     /**
      * 软键盘监听类
      * The On keyboard listener.

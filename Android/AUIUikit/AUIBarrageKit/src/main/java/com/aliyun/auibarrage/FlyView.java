@@ -9,7 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.aliyun.aliinteraction.core.base.LimitSizeRecyclerView;
+import com.alivc.auicommon.core.base.LimitSizeRecyclerView;
 import com.aliyun.aliinteraction.uikit.uibase.helper.RecyclerViewHelper;
 
 import java.io.Serializable;
@@ -46,6 +46,7 @@ public class FlyView extends LimitSizeRecyclerView {
             }
         }
     };
+    private boolean isRunning;
     private final Runnable showTask = new Runnable() {
         @Override
         public void run() {
@@ -63,8 +64,6 @@ public class FlyView extends LimitSizeRecyclerView {
             postDelayed(this, SHOW_MESSAGE_INTERVAL);
         }
     };
-
-    private boolean isRunning;
 
     public FlyView(@NonNull Context context) {
         this(context, null, 0);

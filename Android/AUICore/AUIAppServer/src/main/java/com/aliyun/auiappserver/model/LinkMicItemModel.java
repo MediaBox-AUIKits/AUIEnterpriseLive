@@ -2,8 +2,8 @@ package com.aliyun.auiappserver.model;
 
 import android.text.TextUtils;
 
-import com.aliyun.aliinteraction.common.base.base.Function;
-import com.aliyun.aliinteraction.common.base.util.CollectionUtil;
+import com.alivc.auicommon.common.base.base.Function;
+import com.alivc.auicommon.common.base.util.CollectionUtil;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 

@@ -1,5 +1,7 @@
 package com.aliyun.aliinteraction.uikit.uibase.util;
 
+import static android.animation.ValueAnimator.INFINITE;
+
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
@@ -7,20 +9,19 @@ import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
-import androidx.annotation.AnimRes;
-import androidx.annotation.Nullable;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LinearInterpolator;
 
-import com.aliyun.aliinteraction.common.base.util.Utils;
+import androidx.annotation.AnimRes;
+import androidx.annotation.Nullable;
+
+import com.alivc.auicommon.common.base.util.Utils;
 import com.aliyun.aliinteraction.uikit.R;
 import com.aliyun.aliinteraction.uikit.uibase.listener.SimpleAnimationListener;
 import com.aliyun.aliinteraction.uikit.uibase.listener.SimpleAnimatorListener;
-
-import static android.animation.ValueAnimator.INFINITE;
 
 
 public class AnimUtil {
@@ -182,6 +183,7 @@ public class AnimUtil {
     public static void animRightOut(@Nullable final Runnable endAction, @Nullable View... views) {
         animRightOut(View.GONE, endAction, views);
     }
+
     public static void animRightOut(final int endVisibility, @Nullable final Runnable endAction, @Nullable View... views) {
         anim(endVisibility, R.anim.iub_right_out, endAction, views);
     }

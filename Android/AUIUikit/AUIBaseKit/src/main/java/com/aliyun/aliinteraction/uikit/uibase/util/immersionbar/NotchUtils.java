@@ -17,7 +17,6 @@ import java.lang.reflect.Method;
 /**
  * 刘海屏判断
  * The type Notch utils.
- *
  */
 public class NotchUtils {
 

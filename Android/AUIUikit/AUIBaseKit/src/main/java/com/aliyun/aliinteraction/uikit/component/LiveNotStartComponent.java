@@ -6,8 +6,7 @@ import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.aliyun.aliinteraction.common.biz.exposable.enums.LiveStatus;
-import com.aliyun.aliinteraction.model.Message;
+import com.alivc.auicommon.common.biz.exposable.enums.LiveStatus;
 import com.aliyun.aliinteraction.roompaas.message.listener.SimpleOnMessageListener;
 import com.aliyun.aliinteraction.roompaas.message.model.StartLiveModel;
 import com.aliyun.aliinteraction.roompaas.message.model.StopLiveModel;
@@ -18,6 +17,7 @@ import com.aliyun.aliinteraction.uikit.core.IComponent;
 import com.aliyun.aliinteraction.uikit.uibase.util.AnimUtil;
 import com.aliyun.aliinteraction.uikit.uibase.util.ViewUtil;
 import com.aliyun.auipusher.LiveContext;
+import com.alivc.auimessage.model.base.AUIMessageModel;
 
 /**
  * 直播未开始的视图
@@ -29,7 +29,8 @@ public class LiveNotStartComponent extends RelativeLayout implements ComponentHo
 
     private final Component component = new Component();
     private final TextView tips;
-    private LiveStatus status;
+    private LiveStatus mLiveStatus;
+
     public LiveNotStartComponent(Context context) {
         this(context, null, 0);
     }
@@ -45,9 +46,7 @@ public class LiveNotStartComponent extends RelativeLayout implements ComponentHo
         this.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!status.equals(LiveStatus.NOT_START)&&!status.equals(LiveStatus.END)) {
-                    hide();
-                }
+                hide();
             }
         });
     }
@@ -84,19 +83,19 @@ public class LiveNotStartComponent extends RelativeLayout implements ComponentHo
             hide();
             getMessageService().addMessageListener(new SimpleOnMessageListener() {
                 @Override
-                public void onStartLive(Message<StartLiveModel> message) {
+                public void onStartLive(AUIMessageModel<StartLiveModel> message) {
                     hide();
                 }
 
                 @Override
-                public void onStopLive(Message<StopLiveModel> message) {
-                    tips.setText("直播已结束～");
+                public void onStopLive(AUIMessageModel<StopLiveModel> message) {
+                    tips.setText("直播已结束~");
                     show();
                 }
             });
 
-            status = liveService.getLiveModel().getLiveStatus();
-            switch (status) {
+            mLiveStatus = liveService.getLiveModel().getLiveStatus();
+            switch (mLiveStatus) {
                 case NOT_START:
                     if (!isOwner()) {
                         show();
@@ -104,7 +103,7 @@ public class LiveNotStartComponent extends RelativeLayout implements ComponentHo
                     break;
                 case END:
                     if (!needPlayback()) {
-                        tips.setText("直播已结束～");
+                        tips.setText("直播已结束");
                         show();
                     }
                     break;

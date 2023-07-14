@@ -10,7 +10,7 @@ import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.aliyun.aliinteraction.common.base.util.TimeFormat;
+import com.alivc.auicommon.common.base.util.TimeFormat;
 import com.aliyun.aliinteraction.uikit.R;
 
 /**
@@ -25,6 +25,8 @@ public class ControlView extends RelativeLayout implements View.OnClickListener 
     private TextView totalPosition;
 
     private boolean isPlaying = false;
+    private PlayStatusChange listener;
+    private OnSeekListener seekListener;
 
     public ControlView(Context context) {
         this(context, null);
@@ -104,6 +106,7 @@ public class ControlView extends RelativeLayout implements View.OnClickListener 
 
     /**
      * 设置进度条百分比
+     *
      * @param progress
      */
     public void updateProgress(long progress) {
@@ -112,6 +115,7 @@ public class ControlView extends RelativeLayout implements View.OnClickListener 
 
     /**
      * 设置缓冲进度条
+     *
      * @param progress
      */
     public void setBufferedProgress(long progress) {
@@ -120,6 +124,7 @@ public class ControlView extends RelativeLayout implements View.OnClickListener 
 
     /**
      * 设置当前正在播放的时间
+     *
      * @param position
      */
     public void setCurrentPosition(long position) {
@@ -130,6 +135,7 @@ public class ControlView extends RelativeLayout implements View.OnClickListener 
 
     /**
      * 设置总时长
+     *
      * @param position
      */
     public void setDuration(long position) {
@@ -141,10 +147,13 @@ public class ControlView extends RelativeLayout implements View.OnClickListener 
         this.listener = listener;
     }
 
-    private PlayStatusChange listener;
+    public void setOnSeekListener(OnSeekListener listener) {
+        seekListener = listener;
+    }
 
     public interface PlayStatusChange {
         void onPause();
+
         void onResume();
     }
 
@@ -154,12 +163,6 @@ public class ControlView extends RelativeLayout implements View.OnClickListener 
         void onSeekEnd(int position);
 
         void onProgressChanged(int position);
-    }
-
-    private OnSeekListener seekListener;
-
-    public void setOnSeekListener(OnSeekListener listener) {
-        seekListener = listener;
     }
 
 }

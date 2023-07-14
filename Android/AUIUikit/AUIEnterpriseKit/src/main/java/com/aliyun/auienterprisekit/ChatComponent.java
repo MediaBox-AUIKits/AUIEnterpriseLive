@@ -19,27 +19,14 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.alibaba.dingpaas.interaction.ImCancelMuteUserReq;
-import com.alibaba.dingpaas.interaction.ImCancelMuteUserRsp;
-import com.alibaba.dingpaas.interaction.ImMuteUserReq;
-import com.alibaba.dingpaas.interaction.ImMuteUserRsp;
 import com.alibaba.fastjson.JSON;
-import com.aliyun.aliinteraction.base.ToastCallback;
-import com.aliyun.aliinteraction.common.base.log.Logger;
-import com.aliyun.aliinteraction.common.base.util.CommonUtil;
-import com.aliyun.aliinteraction.common.roombase.Const;
-import com.aliyun.aliinteraction.core.base.Actions;
-import com.aliyun.aliinteraction.core.base.LimitSizeRecyclerView;
-import com.aliyun.aliinteraction.core.base.MessageModel;
-import com.aliyun.aliinteraction.core.utils.MessageHelper;
-import com.aliyun.aliinteraction.enums.BroadcastType;
-import com.aliyun.aliinteraction.model.CancelMuteGroupModel;
-import com.aliyun.aliinteraction.model.CancelMuteUserModel;
-import com.aliyun.aliinteraction.model.JoinGroupModel;
-import com.aliyun.aliinteraction.model.LeaveGroupModel;
-import com.aliyun.aliinteraction.model.Message;
-import com.aliyun.aliinteraction.model.MuteGroupModel;
-import com.aliyun.aliinteraction.model.MuteUserModel;
+import com.alivc.auicommon.common.base.log.Logger;
+import com.alivc.auicommon.common.base.util.CommonUtil;
+import com.alivc.auicommon.common.roombase.Const;
+import com.alivc.auicommon.core.base.Actions;
+import com.alivc.auicommon.core.base.LimitSizeRecyclerView;
+import com.alivc.auicommon.core.base.MessageModel;
+import com.alivc.auicommon.core.utils.MessageHelper;
 import com.aliyun.aliinteraction.roompaas.message.listener.SimpleOnMessageListener;
 import com.aliyun.aliinteraction.roompaas.message.model.CommentModel;
 import com.aliyun.aliinteraction.roompaas.message.model.StartLiveModel;
@@ -53,8 +40,12 @@ import com.aliyun.aliinteraction.uikit.uibase.helper.RecyclerViewHelper;
 import com.aliyun.aliinteraction.uikit.uibase.util.AppUtil;
 import com.aliyun.aliinteraction.uikit.uibase.util.DialogUtil;
 import com.aliyun.auipusher.LiveContext;
+import com.alivc.auimessage.model.base.AUIMessageModel;
+import com.alivc.auimessage.model.message.JoinGroupMessage;
+import com.alivc.auimessage.model.message.LeaveGroupMessage;
+import com.alivc.auimessage.model.message.MuteGroupMessage;
+import com.alivc.auimessage.model.message.UnMuteGroupMessage;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -68,17 +59,16 @@ public class ChatComponent extends RelativeLayout implements ComponentHolder {
     private final Component component = new Component();
     private final LinearLayoutManager layoutManager;
     private final RecyclerViewHelper<MessageModel> recyclerViewHelper;
-    private int commentMaxHeight = AppUtil.getScreenHeight();
-    private String mAnchorId;//主播ID
-    private RelativeLayout unReadMessageLayout;//新消息提示
-    private int itemCount;
     private final Runnable refreshUITask = new Runnable() {
         @Override
         public void run() {
             recyclerView.invalidate();
         }
     };
-
+    private int commentMaxHeight = AppUtil.getScreenHeight();
+    private String mAnchorId;//主播ID
+    private RelativeLayout unReadMessageLayout;//新消息提示
+    private int itemCount;
     private int lastPosition;
     private boolean forceHover;
 
@@ -100,7 +90,7 @@ public class ChatComponent extends RelativeLayout implements ComponentHolder {
         unReadMessageLayout.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                recyclerView.scrollToPosition(itemCount-1);
+                recyclerView.scrollToPosition(itemCount - 1);
                 unReadMessageLayout.setVisibility(View.GONE);
             }
         });
@@ -163,8 +153,7 @@ public class ChatComponent extends RelativeLayout implements ComponentHolder {
                                         ds.setUnderlineText(false);
                                     }
                                 };
-                                spannableString.setSpan(clickableSpan,
-                                        0, prefix.length(), Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
+                                spannableString.setSpan(clickableSpan, 0, prefix.length(), Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
                             }
                             content.setText(spannableString);
                         }
@@ -231,6 +220,13 @@ public class ChatComponent extends RelativeLayout implements ComponentHolder {
                         recyclerViewHelper.removeDataWithoutAnimation(0, suggestRemoveCount);
                     }
                 });
+    }
+
+    protected static String truncateNick(String nick) {
+        if (!TextUtils.isEmpty(nick) && nick.length() > NICK_SHOW_MAX_LENGTH) {
+            nick = nick.substring(0, NICK_SHOW_MAX_LENGTH);
+        }
+        return nick;
     }
 
     /**
@@ -356,13 +352,6 @@ public class ChatComponent extends RelativeLayout implements ComponentHolder {
         return component;
     }
 
-    protected static String truncateNick(String nick) {
-        if (!TextUtils.isEmpty(nick) && nick.length() > NICK_SHOW_MAX_LENGTH) {
-            nick = nick.substring(0, NICK_SHOW_MAX_LENGTH);
-        }
-        return nick;
-    }
-
     private class Component extends BaseComponent {
         @Override
         public void onInit(LiveContext liveContext) {
@@ -380,8 +369,9 @@ public class ChatComponent extends RelativeLayout implements ComponentHolder {
 
             getMessageService().addMessageListener(new SimpleOnMessageListener() {
                 @Override
-                public void onCommentReceived(Message<CommentModel> message) {
-                    String senderId = message.senderId;
+                public void onCommentReceived(AUIMessageModel<CommentModel> message) {
+                    super.onCommentReceived(message);
+                    String senderId = message.senderInfo.userId;
                     if (AppConfig.INSTANCE.showSelfCommentFromLocal()
                             && TextUtils.equals(senderId, Const.getUserId())) {
                         // 自己发送的消息不做上屏显示
@@ -393,21 +383,22 @@ public class ChatComponent extends RelativeLayout implements ComponentHolder {
                 }
 
                 @Override
-                public void onStopLive(Message<StopLiveModel> message) {
+                public void onStopLive(AUIMessageModel<StopLiveModel> message) {
                     if (!isOwner()) {
                         //  addSystemMessage("直播已结束");
                     }
                 }
 
                 @Override
-                public void onStartLive(Message<StartLiveModel> message) {
+                public void onStartLive(AUIMessageModel<StartLiveModel> message) {
                     if (!isOwner()) {
                         // addSystemMessage("直播已开始");
                     }
                 }
 
                 @Override
-                public void onJoinGroup(Message<JoinGroupModel> message) {
+                public void onJoinGroup(AUIMessageModel<JoinGroupMessage> message) {
+                    super.onJoinGroup(message);
                     String userNick = message.senderInfo.userNick;
                     if (!TextUtils.isEmpty(userNick)) {
                         // addSystemMessage(truncateNick(userNick) + "加入了直播间");
@@ -415,7 +406,8 @@ public class ChatComponent extends RelativeLayout implements ComponentHolder {
                 }
 
                 @Override
-                public void onLeaveGroup(Message<LeaveGroupModel> message) {
+                public void onLeaveGroup(AUIMessageModel<LeaveGroupMessage> message) {
+                    super.onLeaveGroup(message);
                     String userNick = message.senderInfo.userNick;
                     if (!TextUtils.isEmpty(userNick)) {
                         // addSystemMessage(truncateNick(userNick) + "离开了直播间");
@@ -423,37 +415,28 @@ public class ChatComponent extends RelativeLayout implements ComponentHolder {
                 }
 
                 @Override
-                public void onMuteGroup(Message<MuteGroupModel> message) {
+                public void onMuteGroup(AUIMessageModel<MuteGroupMessage> message) {
+                    super.onMuteGroup(message);
                     //addSystemMessage("主播开启了全体禁言");
                     component.showToast("主播开启了全体禁言");
                 }
 
                 @Override
-                public void onCancelMuteGroup(Message<CancelMuteGroupModel> message) {
-                   // addSystemMessage("主播取消了全体禁言");
+                public void onUnMuteGroup(AUIMessageModel<UnMuteGroupMessage> message) {
+                    super.onUnMuteGroup(message);
+                    // addSystemMessage("主播取消了全体禁言");
                     component.showToast("主播取消了全体禁言");
                 }
 
-                @Override
-                public void onMuteUser(Message<MuteUserModel> message) {
-                    boolean isSelf = TextUtils.equals(getUserId(), message.data.userId);
-                    String subject = isSelf ? "您" : truncateNick(message.data.userNick);
-                    addSystemMessage(String.format("%s被主播禁言了", subject));
-                }
+                // TODO 禁言回调
 
                 @Override
-                public void onCancelMuteUser(Message<CancelMuteUserModel> message) {
-                    boolean isSelf = TextUtils.equals(getUserId(), message.data.userId);
-                    String subject = isSelf ? "您" : truncateNick(message.data.userNick);
-                    addSystemMessage(String.format("%s被主播取消禁言了", subject));
-                }
-
-                @Override
-                public void onRawMessageReceived(Message<String> message) {
+                public void onRawMessageReceived(AUIMessageModel<String> message) {
+                    super.onRawMessageReceived(message);
                     // 监听全部消息, 仅用于开发测试阶段
                     if (AppConfig.INSTANCE.enableAllMessageReceived()) {
                         addMessageToPanel(Collections.singletonList(new MessageModel(
-                                message.senderId,
+                                message.senderInfo.userId,
                                 String.format("Raw(%s)", message.type),
                                 message.data
                         )));
@@ -516,25 +499,13 @@ public class ChatComponent extends RelativeLayout implements ComponentHolder {
                     new DialogUtil.Action("禁言", new Runnable() {
                         @Override
                         public void run() {
-                            ImMuteUserReq req = new ImMuteUserReq();
-                            req.groupId = component.getGroupId();
-                            req.broadCastType = BroadcastType.SPECIFIC.getValue();
-                            req.muteUserList = new ArrayList<String>() {{
-                                add(model.userId);
-                            }};
-                            interactionService.muteUser(req, new ToastCallback<ImMuteUserRsp>("禁言"));
+                            // TODO 禁言逻辑
                         }
                     }),
                     new DialogUtil.Action("取消禁言", new Runnable() {
                         @Override
                         public void run() {
-                            ImCancelMuteUserReq req = new ImCancelMuteUserReq();
-                            req.groupId = component.getGroupId();
-                            req.broadCastType = BroadcastType.SPECIFIC.getValue();
-                            req.cancelMuteUserList = new ArrayList<String>() {{
-                                add(model.userId);
-                            }};
-                            interactionService.cancelMuteUser(req, new ToastCallback<ImCancelMuteUserRsp>("取消禁言"));
+                            // TODO 取消禁言逻辑
                         }
                     })
             );

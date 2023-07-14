@@ -1,18 +1,16 @@
 package com.aliyun.aliinteraction.player;
 
 import android.content.Context;
-
-import androidx.annotation.NonNull;
-
-import android.graphics.Color;
 import android.text.TextUtils;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 
+import androidx.annotation.NonNull;
+
+import com.alivc.auicommon.common.base.BaseManager;
+import com.alivc.auicommon.common.base.log.Logger;
 import com.aliyun.aliinteraction.player.exposable.CanvasScale;
-import com.aliyun.aliinteraction.common.base.BaseManager;
-import com.aliyun.aliinteraction.common.base.log.Logger;
 import com.aliyun.player.AliPlayer;
 import com.aliyun.player.AliPlayerFactory;
 import com.aliyun.player.IPlayer;
@@ -29,18 +27,140 @@ import com.cicada.player.utils.FrameInfo;
  * 媒体拉流服务
  */
 public class LivePlayerManager extends BaseManager<PlayerEvent> implements SurfaceHolder.Callback {
+    private static final String ARTC = "artc://";
     private static final String TAG = "LivePlayerManager";
     private static final int DEF_MAX_BUFFER_DURATION = 30000;
 
     private String mPullUrl;
     private AliPlayer mAliPlayer;
+    private AliLivePlayerConfig playerConfig;
+    private IPlayer.OnRenderFrameCallback onRenderFrameCallback;
+
+    private Callback callback;
     private final SurfaceView mSurfaceView;
     private final Context mContext;
+    public UtcTimeListener utcTimeListener;
 
-    private AliLivePlayerConfig playerConfig;
-    private Callback callback;
-    private IPlayer.OnRenderFrameCallback onRenderFrameCallback;
-    public static final String ARTC = "artc://";
+    IPlayer.OnRenderingStartListener renderingStartListener = new IPlayer.OnRenderingStartListener() {
+        @Override
+        public void onRenderingStart() {
+            Logger.i(TAG, "onRenderingStart");
+            postEvent(PlayerEvent.RENDER_START);
+        }
+    };
+
+    IPlayer.OnLoadingStatusListener loadingStatusListener = new IPlayer.OnLoadingStatusListener() {
+        @Override
+        public void onLoadingBegin() {
+            Logger.i(TAG, "onLoadingBegin");
+            postEvent(PlayerEvent.PLAYER_LOADING_BEGIN);
+        }
+
+        @Override
+        public void onLoadingProgress(int i, float v) {
+            Logger.i(TAG, "onLoadingProgress " + i);
+            postEvent(PlayerEvent.PLAYER_LOADING_PROGRESS, i);
+        }
+
+        @Override
+        public void onLoadingEnd() {
+            Logger.i(TAG, "onLoadingEnd");
+            postEvent(PlayerEvent.PLAYER_LOADING_END);
+        }
+    };
+
+    IPlayer.OnInfoListener infoListener = new IPlayer.OnInfoListener() {
+        @Override
+        public void onInfo(InfoBean infoBean) {
+            InfoCode infoCode = infoBean.getCode();
+            if ((infoCode != InfoCode.BufferedPosition
+                    && infoCode != InfoCode.CurrentPosition)
+                    && infoCode != InfoCode.CurrentDownloadSpeed
+                    && infoCode != InfoCode.DirectComponentMSG) {
+                // 过滤高频的日志输出
+                Logger.i(TAG, "onInfo: " + infoCode + ", value: " + infoBean.getExtraValue());
+            }
+            if (infoCode == InfoCode.UtcTime) {
+                if (utcTimeListener != null) {
+                    utcTimeListener.onUtcTime(infoBean.getExtraValue());
+                }
+            } else if (infoCode == InfoCode.BufferedPosition) {
+                postEvent(PlayerEvent.BUFFERED_POSITION, infoBean.getExtraValue());
+            } else if (infoCode == InfoCode.CurrentPosition) {
+                postEvent(PlayerEvent.CURRENT_POSITION, infoBean.getExtraValue());
+            } else if (infoCode == InfoCode.CurrentDownloadSpeed) {
+                long kb = infoBean.getExtraValue() / 1024;
+                postEvent(PlayerEvent.PLAYER_DOWNLOAD_SPEED_CHANGE, kb);
+            }
+        }
+    };
+
+    IPlayer.OnCompletionListener completionListener = new IPlayer.OnCompletionListener() {
+        @Override
+        public void onCompletion() {
+            postEvent(PlayerEvent.PLAYER_END);
+        }
+    };
+
+    IPlayer.OnVideoSizeChangedListener onVideoSizeChangedListener = new IPlayer.OnVideoSizeChangedListener() {
+        @Override
+        public void onVideoSizeChanged(int width, int height) {
+            postEvent(PlayerEvent.PLAYER_VIDEO_SIZE, new VideoSize(width, height));
+        }
+    };
+
+    IPlayer.OnVideoRenderedListener onVideoRenderedListener = new IPlayer.OnVideoRenderedListener() {
+        @Override
+        public void onVideoRendered(long timeMs, long pts) {
+            postEvent(PlayerEvent.PLAYER_VIDEO_RENDERED);
+        }
+    };
+
+    IPlayer.OnStateChangedListener onStateChangedListener = new IPlayer.OnStateChangedListener() {
+        @Override
+        public void onStateChanged(int newStatus) {
+            Logger.i(TAG, "onStateChanged newStatus " + newStatus);
+            postEvent(PlayerEvent.PLAYER_STATUS_CHANGE, newStatus);
+        }
+    };
+
+    IPlayer.OnPreparedListener preparedListener = new IPlayer.OnPreparedListener() {
+        @Override
+        public void onPrepared() {
+            mAliPlayer.start();
+            Logger.i(TAG, "onPrepared");
+            postEvent(PlayerEvent.PLAYER_PREPARED);
+        }
+    };
+
+    IPlayer.OnErrorListener errorListener = new IPlayer.OnErrorListener() {
+        @Override
+        public void onError(ErrorInfo errorInfo) {
+            stopPlay();
+            Logger.e(TAG, "onError " + errorInfo.getCode() + ", msg " + errorInfo.getMsg());
+            postEvent(PlayerEvent.PLAYER_ERROR_RAW, errorInfo);
+            if (needLowDelay()) {
+                if (callback != null) {
+                    callback.onRtsPlayerError();
+                }
+                return;
+            } else if (errorInfo.getCode() == ErrorCode.ERROR_NETWORK_HTTP_RANGE) {
+                if (callback != null) {
+                    callback.onPlayerHttpRangeError();
+                }
+                return;
+            }
+            postEvent(PlayerEvent.PLAYER_ERROR, errorInfo);
+        }
+    };
+
+    IPlayer.OnRenderFrameCallback onRenderFrameCallbackInner = new IPlayer.OnRenderFrameCallback() {
+        @Override
+        public boolean onRenderFrame(FrameInfo frameInfo) {
+            return onRenderFrameCallback != null && onRenderFrameCallback.
+                    onRenderFrame(frameInfo);
+        }
+    };
 
     public LivePlayerManager(Context context) {
         mContext = context;
@@ -51,10 +171,23 @@ public class LivePlayerManager extends BaseManager<PlayerEvent> implements Surfa
         init();
     }
 
+    private static IPlayer.ScaleMode convertToPlayerScaleMode(@CanvasScale.Mode int mode) {
+        switch (mode) {
+            case CanvasScale.Mode.SCALE_FILL:
+                return IPlayer.ScaleMode.SCALE_TO_FILL;
+            case CanvasScale.Mode.ASPECT_FIT:
+                return IPlayer.ScaleMode.SCALE_ASPECT_FIT;
+            default:
+            case CanvasScale.Mode.ASPECT_FILL:
+                return IPlayer.ScaleMode.SCALE_ASPECT_FILL;
+        }
+    }
+
     private void init() {
         mAliPlayer = AliPlayerFactory.createAliPlayer(mContext);
         mAliPlayer.setAutoPlay(true);
         mAliPlayer.setScaleMode(IPlayer.ScaleMode.SCALE_ASPECT_FIT);
+
         mAliPlayer.setOnErrorListener(errorListener);
         mAliPlayer.setOnPreparedListener(preparedListener);
         mAliPlayer.setOnRenderingStartListener(renderingStartListener);
@@ -92,18 +225,6 @@ public class LivePlayerManager extends BaseManager<PlayerEvent> implements Surfa
         }
     }
 
-    private static IPlayer.ScaleMode convertToPlayerScaleMode(@CanvasScale.Mode int mode) {
-        switch (mode) {
-            case CanvasScale.Mode.SCALE_FILL:
-                return IPlayer.ScaleMode.SCALE_TO_FILL;
-            case CanvasScale.Mode.ASPECT_FIT:
-                return IPlayer.ScaleMode.SCALE_ASPECT_FIT;
-            default:
-            case CanvasScale.Mode.ASPECT_FILL:
-                return IPlayer.ScaleMode.SCALE_ASPECT_FILL;
-        }
-    }
-
     /**
      * 开启拉流
      *
@@ -119,7 +240,7 @@ public class LivePlayerManager extends BaseManager<PlayerEvent> implements Surfa
         }
         if (url.startsWith(ARTC)) {
             PlayerConfig config = mAliPlayer.getConfig();
-            if(config!=null) {
+            if (config != null) {
                 config.mMaxDelayTime = 1000;
                 config.mStartBufferDuration = 10;
                 config.mHighBufferDuration = 10;
@@ -226,17 +347,6 @@ public class LivePlayerManager extends BaseManager<PlayerEvent> implements Surfa
         utcTimeListener = listener;
     }
 
-    public UtcTimeListener utcTimeListener;
-
-    public interface UtcTimeListener {
-        /**
-         * 回调拿到utcTime
-         *
-         * @param utcTime
-         */
-        void onUtcTime(long utcTime);
-    }
-
     /**
      * 快进到相应的位置
      *
@@ -275,6 +385,15 @@ public class LivePlayerManager extends BaseManager<PlayerEvent> implements Surfa
     }
 
     /**
+     * 获取当前播放参数
+     *
+     * @return
+     */
+    public AliLivePlayerConfig getPlayerConfig() {
+        return playerConfig;
+    }
+
+    /**
      * 设置播放器相关配置参数
      *
      * @param playerConfig
@@ -300,15 +419,6 @@ public class LivePlayerManager extends BaseManager<PlayerEvent> implements Surfa
 
             mAliPlayer.setConfig(config);
         }
-    }
-
-    /**
-     * 获取当前播放参数
-     *
-     * @return
-     */
-    public AliLivePlayerConfig getPlayerConfig() {
-        return playerConfig;
     }
 
     /**
@@ -341,127 +451,6 @@ public class LivePlayerManager extends BaseManager<PlayerEvent> implements Surfa
         return mAliPlayer.getVideoHeight();
     }
 
-    IPlayer.OnPreparedListener preparedListener = new IPlayer.OnPreparedListener() {
-        @Override
-        public void onPrepared() {
-            mAliPlayer.start();
-            Logger.i(TAG, "onPrepared");
-            postEvent(PlayerEvent.PLAYER_PREPARED);
-        }
-    };
-
-    IPlayer.OnRenderingStartListener renderingStartListener = new IPlayer.OnRenderingStartListener() {
-        @Override
-        public void onRenderingStart() {
-            Logger.i(TAG, "onRenderingStart");
-            postEvent(PlayerEvent.RENDER_START);
-        }
-    };
-
-    IPlayer.OnLoadingStatusListener loadingStatusListener = new IPlayer.OnLoadingStatusListener() {
-        @Override
-        public void onLoadingBegin() {
-            Logger.i(TAG, "onLoadingBegin");
-            postEvent(PlayerEvent.PLAYER_LOADING_BEGIN);
-        }
-
-        @Override
-        public void onLoadingProgress(int i, float v) {
-            Logger.i(TAG, "onLoadingProgress " + i);
-            postEvent(PlayerEvent.PLAYER_LOADING_PROGRESS, i);
-        }
-
-        @Override
-        public void onLoadingEnd() {
-            Logger.i(TAG, "onLoadingEnd");
-            postEvent(PlayerEvent.PLAYER_LOADING_END);
-        }
-    };
-
-    IPlayer.OnInfoListener infoListener = new IPlayer.OnInfoListener() {
-        @Override
-        public void onInfo(InfoBean infoBean) {
-            InfoCode infoCode = infoBean.getCode();
-            if ((infoCode != InfoCode.BufferedPosition
-                    && infoCode != InfoCode.CurrentPosition)
-                    && infoCode != InfoCode.CurrentDownloadSpeed
-                    && infoCode != InfoCode.DirectComponentMSG) {
-                // 过滤高频的日志输出
-                Logger.i(TAG, "onInfo: " + infoCode + ", value: " + infoBean.getExtraValue());
-            }
-            if (infoCode == InfoCode.UtcTime) {
-                if (utcTimeListener != null) {
-                    utcTimeListener.onUtcTime(infoBean.getExtraValue());
-                }
-            } else if (infoCode == InfoCode.BufferedPosition) {
-                postEvent(PlayerEvent.BUFFERED_POSITION, infoBean.getExtraValue());
-            } else if (infoCode == InfoCode.CurrentPosition) {
-                postEvent(PlayerEvent.CURRENT_POSITION, infoBean.getExtraValue());
-            } else if (infoCode == InfoCode.CurrentDownloadSpeed) {
-                long kb = infoBean.getExtraValue() / 1024;
-                postEvent(PlayerEvent.PLAYER_DOWNLOAD_SPEED_CHANGE, kb);
-            }
-        }
-    };
-
-    IPlayer.OnCompletionListener completionListener = new IPlayer.OnCompletionListener() {
-        @Override
-        public void onCompletion() {
-            postEvent(PlayerEvent.PLAYER_END);
-        }
-    };
-
-    IPlayer.OnErrorListener errorListener = new IPlayer.OnErrorListener() {
-        @Override
-        public void onError(ErrorInfo errorInfo) {
-            stopPlay();
-            Logger.e(TAG, "onError " + errorInfo.getCode() + ", msg " + errorInfo.getMsg());
-            postEvent(PlayerEvent.PLAYER_ERROR_RAW, errorInfo);
-            if (needLowDelay()) {
-                if (callback != null) {
-                    callback.onRtsPlayerError();
-                }
-                return;
-            } else if (errorInfo.getCode() == ErrorCode.ERROR_NETWORK_HTTP_RANGE) {
-                if (callback != null) {
-                    callback.onPlayerHttpRangeError();
-                }
-                return;
-            }
-            postEvent(PlayerEvent.PLAYER_ERROR, errorInfo);
-        }
-    };
-
-    IPlayer.OnVideoSizeChangedListener onVideoSizeChangedListener = new IPlayer.OnVideoSizeChangedListener() {
-        @Override
-        public void onVideoSizeChanged(int width, int height) {
-            postEvent(PlayerEvent.PLAYER_VIDEO_SIZE, new VideoSize(width, height));
-        }
-    };
-
-    IPlayer.OnVideoRenderedListener onVideoRenderedListener = new IPlayer.OnVideoRenderedListener() {
-        @Override
-        public void onVideoRendered(long timeMs, long pts) {
-            postEvent(PlayerEvent.PLAYER_VIDEO_RENDERED);
-        }
-    };
-
-    IPlayer.OnStateChangedListener onStateChangedListener = new IPlayer.OnStateChangedListener() {
-        @Override
-        public void onStateChanged(int newStatus) {
-            Logger.i(TAG, "onStateChanged newStatus " + newStatus);
-            postEvent(PlayerEvent.PLAYER_STATUS_CHANGE, newStatus);
-        }
-    };
-
-    IPlayer.OnRenderFrameCallback onRenderFrameCallbackInner = new IPlayer.OnRenderFrameCallback() {
-        @Override
-        public boolean onRenderFrame(FrameInfo frameInfo) {
-            return onRenderFrameCallback != null && onRenderFrameCallback.
-                    onRenderFrame(frameInfo);
-        }
-    };
-
     public void setOnRenderFrameCallback(IPlayer.OnRenderFrameCallback onRenderFrameCallback) {
         this.onRenderFrameCallback = onRenderFrameCallback;
     }
@@ -471,6 +460,15 @@ public class LivePlayerManager extends BaseManager<PlayerEvent> implements Surfa
      */
     public boolean needLowDelay() {
         return playerConfig == null || playerConfig.lowDelay;
+    }
+
+    public interface UtcTimeListener {
+        /**
+         * 回调拿到utcTime
+         *
+         * @param utcTime
+         */
+        void onUtcTime(long utcTime);
     }
 
     public interface Callback {

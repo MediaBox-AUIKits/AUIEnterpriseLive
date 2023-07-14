@@ -5,7 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.io.Serializable;
 import java.util.List;
-@JsonIgnoreProperties(ignoreUnknown=true)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class VodInfo implements Serializable {
 
     private static final int STATUS_PLAYBACK_READY = 1;

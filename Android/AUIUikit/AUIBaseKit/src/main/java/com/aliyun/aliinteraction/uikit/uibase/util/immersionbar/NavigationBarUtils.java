@@ -69,10 +69,6 @@ public class NavigationBarUtils implements Constants {
         }
     }
 
-    public interface OnNavigationStateListener {
-        void onNavigationState(boolean isShowing, int height);
-    }
-
     public static int getNavigationHeight(Context activity) {
         if (activity == null) {
             return 0;
@@ -86,5 +82,9 @@ public class NavigationBarUtils implements Constants {
             height = resources.getDimensionPixelSize(resourceId);
         }
         return height;
+    }
+
+    public interface OnNavigationStateListener {
+        void onNavigationState(boolean isShowing, int height);
     }
 }

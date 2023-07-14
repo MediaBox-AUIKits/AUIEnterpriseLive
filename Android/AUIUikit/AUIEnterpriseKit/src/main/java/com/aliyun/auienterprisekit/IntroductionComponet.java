@@ -9,7 +9,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.aliyun.aliinteraction.core.base.Actions;
+import com.alivc.auicommon.core.base.Actions;
 import com.aliyun.aliinteraction.uikit.core.BaseComponent;
 import com.aliyun.aliinteraction.uikit.core.ComponentHolder;
 import com.aliyun.aliinteraction.uikit.core.IComponent;
@@ -17,10 +17,10 @@ import com.aliyun.auiappserver.model.LiveModel;
 import com.aliyun.auipusher.LiveContext;
 
 public class IntroductionComponet extends FrameLayout implements ComponentHolder {
+    private final Component component = new Component();
     private TextView mIntroTitle;
     private TextView mIntroNotice;
     private TextView mIntroTime;
-    private final Component component = new Component();
 
     public IntroductionComponet(@NonNull Context context) {
         this(context, null, 0);
@@ -59,10 +59,11 @@ public class IntroductionComponet extends FrameLayout implements ComponentHolder
         public void onEnterRoomSuccess(LiveModel liveModel) {
             mIntroTitle.setText(liveModel.title);
             mIntroNotice.setText(liveModel.notice);
-            if(!TextUtils.isEmpty(liveModel.createdAt)&&liveModel.createdAt.length()>9){
-                mIntroTime.setText(liveModel.createdAt.replaceAll("T"," ").substring(0, liveModel.createdAt.length() - 9));
+            if (!TextUtils.isEmpty(liveModel.createdAt) && liveModel.createdAt.length() > 9) {
+                mIntroTime.setText(liveModel.createdAt.replaceAll("T", " ").substring(0, liveModel.createdAt.length() - 9));
             }
         }
+
         @Override
         public void onEvent(String action, Object... args) {
             switch (action) {

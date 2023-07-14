@@ -15,13 +15,8 @@ import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.alibaba.dingpaas.interaction.ImSendLikeReq;
-import com.alibaba.dingpaas.interaction.ImSendLikeRsp;
-import com.aliyun.aliinteraction.base.Callback;
-import com.aliyun.aliinteraction.base.Error;
-import com.aliyun.aliinteraction.common.base.log.Logger;
-import com.aliyun.aliinteraction.common.base.util.Utils;
-import com.aliyun.aliinteraction.enums.BroadcastType;
+import com.alivc.auicommon.common.base.log.Logger;
+import com.alivc.auicommon.common.base.util.Utils;
 import com.aliyun.aliinteraction.roompaas.message.helper.LikeHelper;
 import com.aliyun.aliinteraction.uikit.core.BaseComponent;
 import com.aliyun.aliinteraction.uikit.core.ComponentHolder;
@@ -29,6 +24,8 @@ import com.aliyun.aliinteraction.uikit.core.IComponent;
 import com.aliyun.aliinteraction.uikit.uibase.util.AppUtil;
 import com.aliyun.aliinteraction.uikit.uibase.util.ViewUtil;
 import com.aliyun.auipusher.LiveContext;
+import com.alivc.auimessage.listener.InteractionCallback;
+import com.alivc.auimessage.model.base.InteractionError;
 
 import java.lang.ref.WeakReference;
 
@@ -40,11 +37,12 @@ import java.lang.ref.WeakReference;
  */
 public class LiveLikeComponent extends FrameLayout implements ComponentHolder, Handler.Callback {
     public static final String TAG = "LiveLikeView";
-
+    private static final int MSG_LIKE = 0;
+    private static int screenWidth;
+    private static int screenHeight;
     private final Component component = new Component();
     private final LikeHelper likeHelper;
     private final Context context;
-
     private final int[] LIKE_RES_ID_ARRAY = {
             R.drawable.ilr_icon_like_clicked_0,
             R.drawable.ilr_icon_like_clicked_1,
@@ -53,13 +51,10 @@ public class LiveLikeComponent extends FrameLayout implements ComponentHolder, H
             R.drawable.ilr_icon_like_clicked_4,
             R.drawable.ilr_icon_like_clicked_5,
     };
+    private final Handler handler;
     private Drawable[] likeDrawables;
     private boolean longPressBegin;
     private boolean longPressLikeSent;
-    private final Handler handler;
-    private static final int MSG_LIKE = 0;
-    private static int screenWidth;
-    private static int screenHeight;
 
     public LiveLikeComponent(@NonNull Context context) {
         this(context, null, 0);
@@ -88,7 +83,6 @@ public class LiveLikeComponent extends FrameLayout implements ComponentHolder, H
             @Override
             public void onClick(View v) {
                 LiveLikeComponent.this.onLike();
-                component.showToast("仅展示,需要对接互动功能");
             }
         });
 
@@ -224,19 +218,15 @@ public class LiveLikeComponent extends FrameLayout implements ComponentHolder, H
         }
 
         private void doSendLike(int likeCount) {
-            ImSendLikeReq req = new ImSendLikeReq();
-            req.groupId = getGroupId();
-            req.count = likeCount;
-            req.broadCastType = BroadcastType.ALL.getValue();
-            interactionService.sendLike(req, new Callback<ImSendLikeRsp>() {
+            getMessageService().sendLike(likeCount, new InteractionCallback<String>() {
                 @Override
-                public void onSuccess(ImSendLikeRsp rsp) {
+                public void onSuccess(String data) {
 
                 }
 
                 @Override
-                public void onError(Error error) {
-                    showToast("点赞失败, " + error);
+                public void onError(InteractionError interactionError) {
+                    showToast("点赞失败, " + interactionError);
                 }
             });
         }

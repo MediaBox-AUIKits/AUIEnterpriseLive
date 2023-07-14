@@ -3,7 +3,7 @@ package com.aliyun.aliinteraction.uikit.adapter;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.StringRes;
 
-import com.aliyun.aliinteraction.common.base.exposable.PosCallback;
+import com.alivc.auicommon.common.base.exposable.PosCallback;
 
 /**
  * Created by KyleCe on 2021/12/29

@@ -55,20 +55,6 @@ public class AliyunPlayerView extends RelativeLayout {
     }
 
     /**
-     * UI 全屏和小屏模式
-     */
-    public enum AliyunScreenMode {
-        /**
-         * 小屏模式
-         */
-        Small,
-        /**
-         * 全屏模式
-         */
-        Full
-    }
-
-    /**
      * 改变屏幕模式：小屏或者全屏。
      *
      * @param targetMode
@@ -128,15 +114,6 @@ public class AliyunPlayerView extends RelativeLayout {
         return mLockPortraitListener;
     }
 
-
-    public interface LockPortraitListener {
-        public static final int FIX_MODE_SMALL = 1;
-        public static final int FIX_MODE_FULL = 2;
-
-        void onLockScreenMode(int screenMode);
-    }
-
-
     public void changeScreenMode() {
         AliyunScreenMode targetMode;
         if (mCurrentScreenMode == AliyunScreenMode.Small) {
@@ -145,5 +122,28 @@ public class AliyunPlayerView extends RelativeLayout {
             targetMode = AliyunScreenMode.Small;
         }
         changeScreenMode(targetMode, false);
+    }
+
+
+    /**
+     * UI 全屏和小屏模式
+     */
+    public enum AliyunScreenMode {
+        /**
+         * 小屏模式
+         */
+        Small,
+        /**
+         * 全屏模式
+         */
+        Full
+    }
+
+
+    public interface LockPortraitListener {
+        public static final int FIX_MODE_SMALL = 1;
+        public static final int FIX_MODE_FULL = 2;
+
+        void onLockScreenMode(int screenMode);
     }
 }

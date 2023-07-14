@@ -2,9 +2,8 @@ package com.aliyun.auipusher;
 
 import android.app.Activity;
 
-import com.aliyun.aliinteraction.InteractionService;
-import com.aliyun.aliinteraction.common.biz.exposable.enums.LiveStatus;
-import com.aliyun.aliinteraction.core.event.EventManager;
+import com.alivc.auicommon.common.biz.exposable.enums.LiveStatus;
+import com.alivc.auicommon.core.event.EventManager;
 import com.aliyun.aliinteraction.player.LivePlayerService;
 import com.aliyun.aliinteraction.roompaas.message.AUIMessageService;
 import com.aliyun.auiappserver.model.LiveModel;
@@ -52,9 +51,7 @@ public interface LiveContext {
 
     AUIMessageService getMessageService();
 
-    InteractionService getInteractionService();
-
-   // LiveLinkMicPushManager getLiveLinkMicPushManager();
+    LiveLinkMicPushManager getLiveLinkMicPushManager();
 
     LiveModel getLiveModel();
 

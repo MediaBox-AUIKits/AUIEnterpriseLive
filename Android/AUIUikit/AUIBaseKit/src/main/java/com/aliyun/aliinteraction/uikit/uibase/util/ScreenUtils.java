@@ -93,7 +93,7 @@ public class ScreenUtils {
      * 设置屏幕亮度模式（设置Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL：值为0）
      * 才能进行手动调节亮度
      */
-    public static void setScreenManualMode(Activity activity){
+    public static void setScreenManualMode(Activity activity) {
         ContentResolver contentResolver = activity.getContentResolver();
         try {
             int mode = Settings.System.getInt(contentResolver,
@@ -110,7 +110,7 @@ public class ScreenUtils {
     /**
      * 设置屏幕亮度
      */
-    public static void setScreenBrightness(int brightness,Activity activity){
+    public static void setScreenBrightness(int brightness, Activity activity) {
         Window window = activity.getWindow();
         WindowManager.LayoutParams lp = window.getAttributes();
         lp.screenBrightness = brightness / 255.0f;
@@ -120,11 +120,11 @@ public class ScreenUtils {
     /**
      * 获取屏幕亮度
      */
-    public static int getScreenBrightness(Activity activity){
+    public static int getScreenBrightness(Activity activity) {
         int systemBrightness = 0;
-        try{
+        try {
             systemBrightness = Settings.System.getInt(activity.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
-        }catch (Settings.SettingNotFoundException e) {
+        } catch (Settings.SettingNotFoundException e) {
             e.printStackTrace();
         }
         return systemBrightness;

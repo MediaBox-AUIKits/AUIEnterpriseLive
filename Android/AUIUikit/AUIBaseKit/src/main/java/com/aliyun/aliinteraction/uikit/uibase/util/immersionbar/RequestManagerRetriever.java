@@ -20,19 +20,18 @@ import java.util.Map;
 
 /**
  * The type Request manager retriever.
- *
  */
 class RequestManagerRetriever implements Handler.Callback {
 
-    private String mTag = ImmersionBar.class.getName();
-
-    private Handler mHandler;
-
     private static final int ID_REMOVE_FRAGMENT_MANAGER = 1;
     private static final int ID_REMOVE_SUPPORT_FRAGMENT_MANAGER = 2;
+    private final Map<android.app.FragmentManager, RequestManagerFragment> mPendingFragments = new HashMap<>();
+    private final Map<FragmentManager, SupportRequestManagerFragment> mPendingSupportFragments = new HashMap<>();
+    private String mTag = ImmersionBar.class.getName();
+    private Handler mHandler;
 
-    private static class Holder {
-        private static final RequestManagerRetriever INSTANCE = new RequestManagerRetriever();
+    private RequestManagerRetriever() {
+        mHandler = new Handler(Looper.getMainLooper(), this);
     }
 
     /**
@@ -44,12 +43,11 @@ class RequestManagerRetriever implements Handler.Callback {
         return Holder.INSTANCE;
     }
 
-    private RequestManagerRetriever() {
-        mHandler = new Handler(Looper.getMainLooper(), this);
+    private static <T> void checkNotNull(@Nullable T arg, @NonNull String message) {
+        if (arg == null) {
+            throw new NullPointerException(message);
+        }
     }
-
-    private final Map<android.app.FragmentManager, RequestManagerFragment> mPendingFragments = new HashMap<>();
-    private final Map<FragmentManager, SupportRequestManagerFragment> mPendingSupportFragments = new HashMap<>();
 
     /**
      * Get immersion bar.
@@ -242,9 +240,7 @@ class RequestManagerRetriever implements Handler.Callback {
         return fragment;
     }
 
-    private static <T> void checkNotNull(@Nullable T arg, @NonNull String message) {
-        if (arg == null) {
-            throw new NullPointerException(message);
-        }
+    private static class Holder {
+        private static final RequestManagerRetriever INSTANCE = new RequestManagerRetriever();
     }
 }

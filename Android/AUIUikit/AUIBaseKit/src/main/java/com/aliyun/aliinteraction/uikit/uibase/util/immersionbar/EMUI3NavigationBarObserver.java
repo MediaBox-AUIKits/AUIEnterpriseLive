@@ -1,5 +1,7 @@
 package com.aliyun.aliinteraction.uikit.uibase.util.immersionbar;
 
+import static com.aliyun.aliinteraction.uikit.uibase.util.immersionbar.Constants.IMMERSION_EMUI_NAVIGATION_BAR_HIDE_SHOW;
+
 import android.app.Application;
 import android.database.ContentObserver;
 import android.net.Uri;
@@ -10,11 +12,8 @@ import android.provider.Settings;
 
 import java.util.ArrayList;
 
-import static com.aliyun.aliinteraction.uikit.uibase.util.immersionbar.Constants.IMMERSION_EMUI_NAVIGATION_BAR_HIDE_SHOW;
-
 /**
  * 华为Emui3状态栏监听器
- *
  */
 final class EMUI3NavigationBarObserver extends ContentObserver {
 
@@ -22,12 +21,12 @@ final class EMUI3NavigationBarObserver extends ContentObserver {
     private Application mApplication;
     private Boolean mIsRegister = false;
 
-    static EMUI3NavigationBarObserver getInstance() {
-        return NavigationBarObserverInstance.INSTANCE;
-    }
-
     private EMUI3NavigationBarObserver() {
         super(new Handler(Looper.getMainLooper()));
+    }
+
+    static EMUI3NavigationBarObserver getInstance() {
+        return NavigationBarObserverInstance.INSTANCE;
     }
 
     void register(Application application) {

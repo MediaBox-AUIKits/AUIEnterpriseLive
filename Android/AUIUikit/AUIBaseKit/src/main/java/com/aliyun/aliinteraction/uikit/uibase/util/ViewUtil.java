@@ -4,10 +4,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.drawable.Drawable;
-import androidx.annotation.ColorRes;
-import androidx.annotation.DrawableRes;
-import androidx.annotation.Nullable;
-import androidx.annotation.StringRes;
 import android.text.Layout;
 import android.text.TextUtils;
 import android.view.KeyEvent;
@@ -21,10 +17,15 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.aliyun.aliinteraction.common.base.log.Logger;
-import com.aliyun.aliinteraction.common.base.util.Check;
-import com.aliyun.aliinteraction.common.base.util.ThreadUtil;
-import com.aliyun.aliinteraction.common.base.util.Utils;
+import androidx.annotation.ColorRes;
+import androidx.annotation.DrawableRes;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
+
+import com.alivc.auicommon.common.base.log.Logger;
+import com.alivc.auicommon.common.base.util.Check;
+import com.alivc.auicommon.common.base.util.ThreadUtil;
+import com.alivc.auicommon.common.base.util.Utils;
 
 import java.lang.ref.Reference;
 

@@ -19,9 +19,8 @@ import com.aliyun.aliinteraction.uikit.R;
 
 /**
  * The type Bar config.
- *
  */
-class BarConfig implements Constants{
+class BarConfig implements Constants {
 
     private final int mStatusBarHeight;
     private final int mActionBarHeight;

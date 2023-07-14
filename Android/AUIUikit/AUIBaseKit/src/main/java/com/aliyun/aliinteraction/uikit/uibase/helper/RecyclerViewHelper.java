@@ -12,7 +12,7 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.aliyun.aliinteraction.common.base.util.CollectionUtil;
+import com.alivc.auicommon.common.base.util.CollectionUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,19 +33,6 @@ public class RecyclerViewHelper<T> {
     private final Adapter adapter;
     private final List<T> dataList = new ArrayList<>();
 
-    public static <T> RecyclerViewHelper<T> of(@NonNull RecyclerView recyclerView,
-                                               @LayoutRes final int itemLayoutRes,
-                                               @NonNull HolderRenderer<T> holderRenderer) {
-        return new RecyclerViewHelper<>(recyclerView, new ItemViewFactory() {
-            @NonNull
-            @Override
-            public View getItemView(ViewGroup parent) {
-                LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-                return inflater.inflate(itemLayoutRes, parent, false);
-            }
-        }, holderRenderer);
-    }
-
     private RecyclerViewHelper(@NonNull RecyclerView recyclerView,
                                @NonNull ItemViewFactory itemViewFactory,
                                @NonNull HolderRenderer<T> holderRenderer) {
@@ -60,6 +47,19 @@ public class RecyclerViewHelper<T> {
         }
         adapter = new Adapter();
         recyclerView.setAdapter(adapter);
+    }
+
+    public static <T> RecyclerViewHelper<T> of(@NonNull RecyclerView recyclerView,
+                                               @LayoutRes final int itemLayoutRes,
+                                               @NonNull HolderRenderer<T> holderRenderer) {
+        return new RecyclerViewHelper<>(recyclerView, new ItemViewFactory() {
+            @NonNull
+            @Override
+            public View getItemView(ViewGroup parent) {
+                LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+                return inflater.inflate(itemLayoutRes, parent, false);
+            }
+        }, holderRenderer);
     }
 
     /**
@@ -195,6 +195,43 @@ public class RecyclerViewHelper<T> {
         return Collections.unmodifiableList(dataList);
     }
 
+    /**
+     * ItemView工厂类
+     */
+    public interface ItemViewFactory {
+        @NonNull
+        View getItemView(ViewGroup parent);
+    }
+
+    /**
+     * ViewHolder渲染器
+     *
+     * @param <T> 数据模型
+     */
+    public interface HolderRenderer<T> {
+        void render(RecyclerViewHelper<T> viewHelper, ViewHolder holder, T model, int position, int itemCount, List<Object> payloads);
+    }
+
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+
+        private final SparseArray<View> viewCaches = new SparseArray<>();
+
+        ViewHolder(@NonNull View itemView) {
+            super(itemView);
+        }
+
+        @SuppressWarnings("unchecked")
+        public <V extends View> V getView(@IdRes int id) {
+            // 使用ViewCache来解决"抽象层无法穷举成员变量"和"重复findViewById调用"的冲突
+            View view = viewCaches.get(id);
+            if (view == null) {
+                view = itemView.findViewById(id);
+                viewCaches.put(id, view);
+            }
+            return (V) view;
+        }
+    }
+
     private class Adapter extends RecyclerView.Adapter<ViewHolder> {
 
         @NonNull
@@ -222,42 +259,5 @@ public class RecyclerViewHelper<T> {
         public int getItemCount() {
             return dataList.size();
         }
-    }
-
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-
-        private final SparseArray<View> viewCaches = new SparseArray<>();
-
-        ViewHolder(@NonNull View itemView) {
-            super(itemView);
-        }
-
-        @SuppressWarnings("unchecked")
-        public <V extends View> V getView(@IdRes int id) {
-            // 使用ViewCache来解决"抽象层无法穷举成员变量"和"重复findViewById调用"的冲突
-            View view = viewCaches.get(id);
-            if (view == null) {
-                view = itemView.findViewById(id);
-                viewCaches.put(id, view);
-            }
-            return (V) view;
-        }
-    }
-
-    /**
-     * ItemView工厂类
-     */
-    public interface ItemViewFactory {
-        @NonNull
-        View getItemView(ViewGroup parent);
-    }
-
-    /**
-     * ViewHolder渲染器
-     *
-     * @param <T> 数据模型
-     */
-    public interface HolderRenderer<T> {
-        void render(RecyclerViewHelper<T> viewHelper, ViewHolder holder, T model, int position, int itemCount, List<Object> payloads);
     }
 }

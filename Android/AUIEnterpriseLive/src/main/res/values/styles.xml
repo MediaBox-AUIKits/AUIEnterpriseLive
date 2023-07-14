@@ -1,6 +1,0 @@
-<resources>
-
-    <!-- 直播间Activity主题 -->
-    <style name="Theme4LiveActivity" parent="Theme.AppCompat.NoActionBar">
-    </style>
-</resources>

@@ -6,7 +6,7 @@ import android.view.KeyEvent;
 
 import androidx.annotation.Nullable;
 
-import com.aliyun.aliinteraction.core.assist.Assist;
+import com.alivc.auicommon.core.assist.Assist;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 

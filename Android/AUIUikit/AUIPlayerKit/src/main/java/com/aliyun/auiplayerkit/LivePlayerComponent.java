@@ -5,10 +5,10 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.aliyun.aliinteraction.core.base.Actions;
 import com.aliyun.aliinteraction.player.SimpleLivePlayerEventHandler;
 import com.aliyun.aliinteraction.uikit.core.BaseComponent;
 import com.aliyun.aliinteraction.uikit.core.ComponentHolder;
@@ -27,25 +27,15 @@ public class LivePlayerComponent extends FrameLayout implements ComponentHolder 
 
     private final ControlView controlView;
 
-    private boolean isEnterpriseLive = false;
-
-    public LivePlayerComponent(@NonNull Context context) {
-        this(context, null, 0);
-    }
-
     public LivePlayerComponent(@NonNull Context context, @Nullable AttributeSet attrs) {
-        this(context, attrs, 0);
-    }
-
-    public LivePlayerComponent(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs);
         View.inflate(context, R.layout.ilr_view_live_playback, this);
         controlView = findViewById(R.id.view_control_view);
+
         controlView.setPlayStatusClickListener(component);
         controlView.setOnSeekListener(component);
         setVisible(false);
     }
-
 
     private void setVisible(boolean visible) {
         ViewGroup.LayoutParams layoutParams = getLayoutParams();
@@ -65,27 +55,6 @@ public class LivePlayerComponent extends FrameLayout implements ComponentHolder 
 
         boolean isEnd;
         boolean isDragging;
-
-        @Override
-        public void onEvent(String action, Object... args) {
-            switch (action) {
-                case Actions.IMMERSIVE_PLAYER:
-                    if(args[0].equals(true)){
-                        setVisibility(View.GONE);
-                    }else{
-                        setVisibility(View.VISIBLE);
-                    }
-                    break;
-                case Actions.PLAYBACK_MESSAGE:
-                    setVisible(needPlayback());
-                    break;
-                case Actions.ENTER_ENTERPRISE:
-                    isEnterpriseLive = true;
-                    break;
-                default:
-                    break;
-            }
-        }
 
         @Override
         public void onInit(LiveContext liveContext) {
@@ -122,9 +91,7 @@ public class LivePlayerComponent extends FrameLayout implements ComponentHolder 
 
         @Override
         public void onEnterRoomSuccess(LiveModel liveModel) {
-            if(!isEnterpriseLive) {
-                setVisible(needPlayback());
-            }
+            setVisible(needPlayback());
         }
 
         @Override

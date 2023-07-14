@@ -11,15 +11,15 @@ import java.io.Serializable;
 @SpHelper.Sp
 public interface UserSp extends Serializable {
 
-    @SpHelper.Setter
-    void setUserId(String userId);
-
     @SpHelper.Getter
     String getUserId();
 
     @SpHelper.Setter
-    void setNick(String nick);
+    void setUserId(String userId);
 
     @SpHelper.Getter
     String getNick();
+
+    @SpHelper.Setter
+    void setNick(String nick);
 }

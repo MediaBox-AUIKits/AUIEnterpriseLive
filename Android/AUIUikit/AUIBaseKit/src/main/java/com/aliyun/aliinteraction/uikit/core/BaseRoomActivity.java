@@ -1,7 +1,7 @@
 package com.aliyun.aliinteraction.uikit.core;
 
-import com.aliyun.auiappserver.model.LiveModel;
 import com.aliyun.aliinteraction.uikit.uibase.activity.BaseActivity;
+import com.aliyun.auiappserver.model.LiveModel;
 
 /**
  * 房间Activity, 封装房间相关的通用处理逻辑

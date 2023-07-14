@@ -32,5 +32,4 @@ dependencies {
     implementation project(':AUIUikit:AUILikeKit')
     implementation project(':AUIUikit:AUIPlayerKit')
     implementation project(':AUIUikit:AUIBarrageKit')
-    //implementation project(':AUIInteractionUikit:AUIPusherKit')
 }

@@ -5,8 +5,9 @@ buildscript {
         jcenter()
         mavenLocal()
         maven { url 'https://maven.aliyun.com/nexus/content/repositories/releases' }
-        maven { url 'https://jitpack.io'}
-        maven { url 'http://mvnrepo.alibaba-inc.com/nexus/content/repositories/snapshots'}
+        maven { url 'https://jitpack.io' }
+        maven { url 'http://mvnrepo.alibaba-inc.com/nexus/content/repositories/snapshots' }
+        maven { url "https://maven.rongcloud.cn/repository/maven-releases/" }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:4.0.2'
@@ -20,7 +21,8 @@ allprojects {
         mavenLocal()
         maven { url 'https://maven.aliyun.com/nexus/content/repositories/releases' }
         maven { url 'https://jitpack.io' }
-        maven { url 'http://mvnrepo.alibaba-inc.com/nexus/content/repositories/snapshots'}
+        maven { url 'http://mvnrepo.alibaba-inc.com/nexus/content/repositories/snapshots' }
+        maven { url "https://maven.rongcloud.cn/repository/maven-releases/" }
     }
 }
 
