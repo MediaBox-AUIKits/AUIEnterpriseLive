@@ -8,6 +8,7 @@ AUI Kits 互动直播场景（横屏样式）集成工具是阿里云针对企�
 ### 源码下载
 下载地址[请参见](https://github.com/MediaBox-AUIKits/AUIEnterpriseLive/tree/main/Android)
 
+
 ### 目录结构
 
 ```html
