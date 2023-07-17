@@ -28,9 +28,18 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (void)stopLive:(NSString *)liveId completed:(void(^)(AUIRoomLiveInfoModel * _Nullable model, NSError * _Nullable error))completed;
 
+
++ (void)muteAll:(NSString *)liveId completed:(void(^)(NSError * _Nullable error))completed;
++ (void)cancelMuteAll:(NSString *)liveId completed:(void(^)(NSError * _Nullable error))completed;
++ (void)queryMuteAll:(NSString *)liveId completed:(void(^)(BOOL isMuteAll, NSError * _Nullable error))completed;
+
++ (void)sendLike:(NSString *)liveId count:(NSUInteger)count completed:(void(^)(NSError * _Nullable error))completed;
+
 + (void)fetchLiveList:(NSUInteger)pageNum pageSize:(NSUInteger)pageSize completed:(void(^)(NSArray<AUIRoomLiveInfoModel *> * _Nullable models, NSError * _Nullable error))completed;
 
 + (void)fetchLive:(NSString *)liveId userId:(NSString * _Nullable)userId completed:(void(^)(AUIRoomLiveInfoModel * _Nullable model, NSError * _Nullable error))completed;
+
++ (void)fetchStatistics:(NSString *)liveId completed:(void(^)(AUIRoomLiveMetricsModel * _Nullable model, NSError * _Nullable error))completed;
 
 + (void)updateLive:(NSString *)liveId title:(NSString * _Nullable)title notice:(NSString * _Nullable)notice extend:(NSDictionary * _Nullable)extend completed:(void(^)(AUIRoomLiveInfoModel * _Nullable model, NSError * _Nullable error))completed;
 

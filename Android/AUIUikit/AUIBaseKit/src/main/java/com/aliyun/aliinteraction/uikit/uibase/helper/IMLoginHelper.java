@@ -1,25 +1,14 @@
 package com.aliyun.aliinteraction.uikit.uibase.helper;
 
 import android.text.TextUtils;
-import android.util.Pair;
 
-import com.alibaba.dingpaas.base.DPSConnectionStatus;
-import com.aliyun.aliinteraction.EngineConfig;
-import com.aliyun.aliinteraction.IToken;
-import com.aliyun.aliinteraction.InteractionEngine;
-import com.aliyun.aliinteraction.TokenAccessor;
-import com.aliyun.aliinteraction.base.Callback;
-import com.aliyun.aliinteraction.base.Error;
-import com.aliyun.aliinteraction.common.base.util.TokenParser;
-import com.aliyun.aliinteraction.listener.SimpleEngineListener;
-import com.aliyun.aliinteraction.uikit.core.AppConfig;
-import com.aliyun.aliinteraction.uikit.uibase.util.UserHelper;
-import com.aliyun.aliinteraction.util.CommonUtil;
-import com.aliyun.aliinteraction.util.Util;
-import com.aliyun.auiappserver.ApiService;
-import com.aliyun.auiappserver.AppServerApi;
-import com.aliyun.auiappserver.model.Token;
-import com.aliyun.auiappserver.model.TokenRequest;
+import androidx.annotation.NonNull;
+
+import com.alivc.auimessage.MessageService;
+import com.alivc.auimessage.MessageServiceFactory;
+import com.alivc.auimessage.listener.InteractionCallback;
+import com.alivc.auimessage.model.base.AUIMessageUserInfo;
+import com.alivc.auimessage.model.base.InteractionError;
 
 /**
  * IM登录辅助类
@@ -31,100 +20,76 @@ public class IMLoginHelper {
 
     private static boolean isLoginPending;
 
-    static {
-        EngineConfig config = new EngineConfig();
-        config.deviceId = CommonUtil.getDeviceId();
-        config.tokenAccessor = new TokenAccessor() {
-            @Override
-            public void getToken(String userId, final Callback<IToken> callback) {
-                TokenRequest request = new TokenRequest();
-                request.userId = userId;
-                request.deviceId = CommonUtil.getDeviceId();
-                request.deviceType = "android";
-                ApiService apiService = AppServerApi.instance();
-                apiService.getToken(request).invoke(new Callback<Token>() {
-                    @Override
-                    public void onSuccess(Token token) {
-                        String longLinkUrl = AppConfig.INSTANCE.longLinkUrl();
-                        if (!TextUtils.isEmpty(longLinkUrl)) {
-                            Pair<String, String> tokenAndUrl = TokenParser.decodeTokenAndUrl(token.accessToken);
-                            token.accessToken = TokenParser.encodeTokenAndUrl(tokenAndUrl.first, longLinkUrl);
-                        }
-                        callback.onSuccess(token);
-                    }
-
-                    @Override
-                    public void onError(Error error) {
-                        callback.onError(error);
-                    }
-                });
-            }
-        };
-        InteractionEngine.instance().init(config);
-    }
-
-    public static void login(final String userId, final Callback<Void> callback) {
+    public static void login(@NonNull final AUIMessageUserInfo userInfo, final InteractionCallback<Void> callback) {
+        String userId = userInfo.userId;
         if (TextUtils.isEmpty(userId)) {
-            Util.callError(callback, "用户Id不能为空");
+            if (callback != null) {
+                callback.onError(new InteractionError("用户Id不能为空"));
+            }
             return;
         }
 
         if (isLoginPending) {
-            Util.callError(callback, "正在进行登录操作, 请稍等");
+            if (callback != null) {
+                callback.onError(new InteractionError("正在进行登录操作, 请稍等"));
+            }
             return;
         }
 
         isLoginPending = true;
-        InteractionEngine engine = InteractionEngine.instance();
-        if (engine.isLogin()) {
+        MessageService messageService = MessageServiceFactory.getMessageService();
+        AUIMessageUserInfo currentUserInfo = messageService.getCurrentUserInfo();
+        if (messageService.isLogin() && currentUserInfo != null) {
             // 1. 已登录, 检查是不是同一个userId
-            if (TextUtils.equals(userId, engine.getCurrentUserId())) {
+            if (TextUtils.equals(userId, currentUserInfo.userId)) {
                 // 1.1 是同一个, 直接回调成功
                 isLoginPending = false;
-                Util.callSuccess(callback);
+                if (callback != null) {
+                    callback.onSuccess(null);
+                }
             } else {
                 // 1.2 不是同一个, 先登出旧的
-                engine.logout(new Callback<Void>() {
+                messageService.logout(new InteractionCallback<Void>() {
                     @Override
                     public void onSuccess(Void unused) {
                         // 1.2.1 再登入新的
-                        performLogin(userId, callback);
+                        performLogin(userInfo, callback);
                     }
 
                     @Override
-                    public void onError(Error error) {
+                    public void onError(InteractionError error) {
                         // 1.2.2 登出失败, 回调失败信息出去
                         isLoginPending = false;
-                        Util.callError(callback, error);
+                        if (callback != null) {
+                            callback.onError(error);
+                        }
                     }
                 });
             }
         } else {
             // 2. 未登录, 直接登录
-            performLogin(userId, callback);
+            performLogin(userInfo, callback);
         }
     }
 
-    private static void performLogin(final String userId, final Callback<Void> callback) {
-        final InteractionEngine engine = InteractionEngine.instance();
-        engine.register(new SimpleEngineListener() {
+    private static void performLogin(final AUIMessageUserInfo userInfo, final InteractionCallback<Void> callback) {
+        MessageService messageService = MessageServiceFactory.getMessageService();
+        messageService.login(userInfo, new InteractionCallback<Void>() {
             @Override
-            public void onConnectionStatusChanged(DPSConnectionStatus status) {
-                if (status == DPSConnectionStatus.CS_AUTHED) {
-                    isLoginPending = false;
-                    UserHelper.storeUserId(userId);
-                    engine.unregister(this);
-                    Util.callSuccess(callback);
+            public void onSuccess(Void data) {
+                isLoginPending = false;
+                if (callback != null) {
+                    callback.onSuccess(null);
                 }
             }
 
             @Override
-            public void onError(Error error) {
+            public void onError(InteractionError error) {
                 isLoginPending = false;
-                engine.unregister(this);
-                Util.callError(callback, error);
+                if (callback != null) {
+                    callback.onError(error);
+                }
             }
         });
-        engine.login(userId);
     }
 }

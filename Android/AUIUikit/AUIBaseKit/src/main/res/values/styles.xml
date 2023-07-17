@@ -37,8 +37,8 @@
     </declare-styleable>
 
     <declare-styleable name="FixedAspectRatioFrameLayout">
-        <attr name="aspectRatioWidth" format="integer"/>
-        <attr name="aspectRatioHeight" format="integer"/>
+        <attr name="aspectRatioWidth" format="integer" />
+        <attr name="aspectRatioHeight" format="integer" />
     </declare-styleable>
 
     <!-- 输入框弹窗样式 -->

@@ -3,9 +3,9 @@
     android:shape="oval"
     android:useLevel="false">
     <solid android:color="#FF5722"></solid>
-<!--    <size-->
-<!--        android:width="19dp"-->
-<!--        android:height="18dp"></size>-->
+    <!--    <size-->
+    <!--        android:width="19dp"-->
+    <!--        android:height="18dp"></size>-->
     <padding
         android:bottom="1dp"
         android:left="2dp"

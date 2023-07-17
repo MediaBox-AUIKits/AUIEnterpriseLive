@@ -6,13 +6,13 @@ import android.graphics.BitmapFactory;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.util.AttributeSet;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatImageView;
 
-import android.util.AttributeSet;
-
-import com.aliyun.aliinteraction.common.base.log.Logger;
-import com.aliyun.aliinteraction.common.base.util.ThreadUtil;
+import com.alivc.auicommon.common.base.log.Logger;
+import com.alivc.auicommon.common.base.util.ThreadUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,19 +26,6 @@ public class NetworkImageView extends AppCompatImageView {
     public static final int GET_DATA_SUCCESS = 1;
     public static final int GET_DATA_NETWORK_ERROR = 2;
     public static final int GET_DATA_SERVER_ERROR = 3;
-
-    public NetworkImageView(Context context) {
-        super(context);
-    }
-
-    public NetworkImageView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-    }
-
-    public NetworkImageView(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-    }
-
     private Handler handler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(@NonNull Message msg) {
@@ -54,6 +41,18 @@ public class NetworkImageView extends AppCompatImageView {
             }
         }
     };
+
+    public NetworkImageView(Context context) {
+        super(context);
+    }
+
+    public NetworkImageView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
+
+    public NetworkImageView(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+    }
 
     public void setImageUrl(final String imageUrl) {
         if (imageUrl != null) {

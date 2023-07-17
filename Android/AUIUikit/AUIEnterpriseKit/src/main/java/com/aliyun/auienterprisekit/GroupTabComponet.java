@@ -11,8 +11,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.aliyun.aliinteraction.common.biz.exposable.enums.LiveStatus;
-import com.aliyun.aliinteraction.core.base.Actions;
+import com.alivc.auicommon.common.biz.exposable.enums.LiveStatus;
+import com.alivc.auicommon.core.base.Actions;
 import com.aliyun.aliinteraction.uikit.core.BaseComponent;
 import com.aliyun.aliinteraction.uikit.core.ComponentHolder;
 import com.aliyun.aliinteraction.uikit.core.IComponent;
@@ -20,6 +20,7 @@ import com.aliyun.auiappserver.model.LiveModel;
 import com.aliyun.auipusher.LiveContext;
 
 public class GroupTabComponet extends FrameLayout implements ComponentHolder {
+    private final Component component = new Component();
     private RadioButton mChatBtn;//聊天tab
     private View mChatLine;
     private RadioButton mIntroductionBtn;//简介tab
@@ -27,7 +28,6 @@ public class GroupTabComponet extends FrameLayout implements ComponentHolder {
     private TextView mUnreadMessageCount;//未读消息数量
     private int mMessageNum;//消息数量
     private LinearLayout mChatLayout;//聊天tab
-    private final Component component = new Component();
 
     public GroupTabComponet(@NonNull Context context) {
         this(context, null, 0);
@@ -104,7 +104,7 @@ public class GroupTabComponet extends FrameLayout implements ComponentHolder {
 
         @Override
         public void onEvent(String action, Object... args) {
-            if (Actions.SHOW_MESSAGE_TIPS.equals(action)&&mIntroductionLine.getVisibility()==View.VISIBLE) {
+            if (Actions.SHOW_MESSAGE_TIPS.equals(action) && mIntroductionLine.getVisibility() == View.VISIBLE) {
                 mUnreadMessageCount.setVisibility(View.VISIBLE);
                 mMessageNum++;
                 mUnreadMessageCount.setText(String.valueOf(mMessageNum));

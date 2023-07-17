@@ -11,19 +11,12 @@ import android.widget.FrameLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.alibaba.dingpaas.base.DPSError;
-import com.alibaba.dingpaas.room.DestroyLiveCb;
-import com.alibaba.dingpaas.room.DestroyLiveReq;
-import com.alibaba.dingpaas.room.DestroyLiveRsp;
-import com.alibaba.dingpaas.room.RoomExtInterface;
-import com.alibaba.dingpaas.room.RoomModule;
-import com.aliyun.aliinteraction.common.base.EventHandlerManager;
-import com.aliyun.aliinteraction.common.base.callback.UICallback;
-import com.aliyun.aliinteraction.common.base.error.Errors;
-import com.aliyun.aliinteraction.common.base.exposable.Callback;
-import com.aliyun.aliinteraction.common.base.log.Logger;
-import com.aliyun.aliinteraction.common.base.util.CommonUtil;
-import com.aliyun.aliinteraction.common.base.util.Utils;
+import com.alivc.auicommon.common.base.EventHandlerManager;
+import com.alivc.auicommon.common.base.callback.UICallback;
+import com.alivc.auicommon.common.base.error.Errors;
+import com.alivc.auicommon.common.base.exposable.Callback;
+import com.alivc.auicommon.common.base.log.Logger;
+import com.alivc.auicommon.common.base.util.CommonUtil;
 import com.aliyun.auiappserver.model.LiveModel;
 import com.aliyun.auipusher.config.AliLivePusherOptions;
 import com.aliyun.auipusher.config.CanvasScale;
@@ -39,7 +32,6 @@ class LivePusherServiceImpl implements LivePusherService {
 
     private final LiveServiceImpl.LiveServiceContext serviceContext;
     private final Context context;
-    private final RoomExtInterface roomExtInterface;
     private final AliLivePusherOptions aliLivePusherOptions;
 
     private LivePushManager livePushManager;
@@ -50,7 +42,6 @@ class LivePusherServiceImpl implements LivePusherService {
     public LivePusherServiceImpl(LiveServiceImpl.LiveServiceContext serviceContext, AliLivePusherOptions aliLivePusherOptions) {
         this.serviceContext = serviceContext;
         this.context = serviceContext.getContext();
-        this.roomExtInterface = RoomModule.getModule(serviceContext.getUserId()).getExtInterface();
         this.aliLivePusherOptions = aliLivePusherOptions;
         if (serviceContext.getLiveModel().mode == 1) {
             isCanLinkMic = true;
@@ -228,20 +219,8 @@ class LivePusherServiceImpl implements LivePusherService {
             return;
         }
 
-        DestroyLiveReq req = new DestroyLiveReq();
-        req.liveId = liveId;
-        roomExtInterface.destroyLive(req, new DestroyLiveCb() {
-            @Override
-            public void onSuccess(DestroyLiveRsp rsp) {
-                stopPublishIfNeed();
-                uiCallback.onSuccess(null);
-            }
-
-            @Override
-            public void onFailure(DPSError dpsError) {
-                Utils.callErrorWithDps(uiCallback, dpsError);
-            }
-        });
+        stopPublishIfNeed();
+        uiCallback.onSuccess(null);
     }
 
     private void stopPublishIfNeed() {
@@ -341,34 +320,6 @@ class LivePusherServiceImpl implements LivePusherService {
         }
     }
 
-    private class LiveSdkEventListener implements LivePushManager.Callback {
-
-        @Override
-        public void onEvent(final LiveEvent event, @Nullable final Map<String, Object> extras) {
-            serviceContext.dispatch(new EventHandlerManager.Consumer<LiveEventHandler>() {
-                @Override
-                public void consume(LiveEventHandler eventHandler) {
-                    // 透出到外部
-                    eventHandler.onPusherEvent(event, extras);
-                }
-            });
-        }
-    }
-
-    private class LiveLinkSdkEventListener implements LiveLinkMicPushManager.Callback {
-
-        @Override
-        public void onEvent(final LiveEvent event, @Nullable final Map<String, Object> extras) {
-            serviceContext.dispatch(new EventHandlerManager.Consumer<LiveEventHandler>() {
-                @Override
-                public void consume(LiveEventHandler eventHandler) {
-                    // 透出到外部
-                    eventHandler.onPusherEvent(event, extras);
-                }
-            });
-        }
-    }
-
     // 懒加载处理, 使用时再获取
     @NonNull
     private LivePushManager getPushManager() {
@@ -399,5 +350,33 @@ class LivePusherServiceImpl implements LivePusherService {
         LiveLinkMicPushManager pushManager = new LiveLinkMicPushManager(context, aliLivePusherOptions);
         pushManager.setCallback(new LiveLinkSdkEventListener());
         return pushManager;
+    }
+
+    private class LiveSdkEventListener implements LivePushManager.Callback {
+
+        @Override
+        public void onEvent(final LiveEvent event, @Nullable final Map<String, Object> extras) {
+            serviceContext.dispatch(new EventHandlerManager.Consumer<LiveEventHandler>() {
+                @Override
+                public void consume(LiveEventHandler eventHandler) {
+                    // 透出到外部
+                    eventHandler.onPusherEvent(event, extras);
+                }
+            });
+        }
+    }
+
+    private class LiveLinkSdkEventListener implements LiveLinkMicPushManager.Callback {
+
+        @Override
+        public void onEvent(final LiveEvent event, @Nullable final Map<String, Object> extras) {
+            serviceContext.dispatch(new EventHandlerManager.Consumer<LiveEventHandler>() {
+                @Override
+                public void consume(LiveEventHandler eventHandler) {
+                    // 透出到外部
+                    eventHandler.onPusherEvent(event, extras);
+                }
+            });
+        }
     }
 }

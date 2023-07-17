@@ -1,8 +1,10 @@
 package com.aliyun.auiappserver;
 
 import android.text.TextUtils;
+
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+
 import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -12,21 +14,29 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @SuppressWarnings({"FieldMayBeFinal"})
-class RetrofitManager {
+public class RetrofitManager {
 
     private static Retrofit sRetrofit;
+    private static String sAPPServerUrl;
     private static String sEnv = "production";
-    private static String sForceServerUrl = "https://appserverjava.h5video.vip";
 
     static <T> T getService(Class<T> serviceType) {
         return getRetrofit().create(serviceType);
     }
 
+    /**
+     * 外部设置app server地址
+     *
+     * @param serverUrl app server地址
+     */
+    public static void setAppServerUrl(String serverUrl) {
+        sAPPServerUrl = serverUrl;
+    }
+
     private static Retrofit getRetrofit() {
         if (sRetrofit == null) {
-            String finalServerUrl = sForceServerUrl;
             sRetrofit = new Retrofit.Builder()
-                    .baseUrl(finalServerUrl + "/api/v1/")
+                    .baseUrl(sAPPServerUrl + "/api/v1/")
                     .addConverterFactory(JacksonConverterFactory.create())
                     .addCallAdapterFactory(new ApiInvokerCallAdapterFactory())
                     .client(new OkHttpClient.Builder()
@@ -54,4 +64,12 @@ class RetrofitManager {
         return sRetrofit;
     }
 
+    public static class Const {
+        // 互动直播-内部IM使用的APP Server地址
+        public static final String APP_SERVER_URL_ALIVC = "https://appserver.h5video.vip";
+        // 互动直播-融云IM使用的APP Server地址
+        public static final String APP_SERVER_URL_RONG_CLOUD = "https://aui-ronppserver-aui-ronppserver-bfnwzrekhj.cn-shanghai.fcapp.run";
+        // 企业直播-内部IM使用的APP Server地址
+        public static final String APP_SERVER_URL_ENTERPRISE = "https://appserverjava.h5video.vip";
+    }
 }

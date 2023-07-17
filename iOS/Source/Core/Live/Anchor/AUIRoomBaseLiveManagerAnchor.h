@@ -9,7 +9,7 @@
 #import "AUIRoomDisplayView.h"
 #import "AUIRoomUser.h"
 #import "AUIRoomLiveModel.h"
-#import "AUIRoomMessageModel.h"
+#import "AUIRoomLiveService.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -56,7 +56,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (copy, nonatomic) void (^onReceivedLike)(AUIRoomUser *sender, NSInteger likeCount);
 
 // PV
-@property (copy, nonatomic) void (^onReceivedPV)(AUIRoomUser *sender, NSInteger pv);
+@property (copy, nonatomic) void (^onReceivedPV)(NSInteger pv);
 @property (assign, nonatomic, readonly) NSInteger pv;
 
 // 公告

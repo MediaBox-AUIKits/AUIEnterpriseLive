@@ -115,7 +115,7 @@
         [_liveManager setupPullPlayer:YES];
 
         __weak typeof(self) weakSelf = self;
-        _liveManager.onReceivedPV = ^(AUIRoomUser * _Nonnull sender, NSInteger pv) {
+        _liveManager.onReceivedPV = ^(NSInteger pv) {
             [weakSelf.membersButton updateMemberCount:pv];
         };
         _liveManager.onReceivedStartLive = ^{

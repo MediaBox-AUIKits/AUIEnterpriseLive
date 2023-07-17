@@ -8,10 +8,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageView;
 
-import com.alibaba.dingpaas.interaction.ImLeaveGroupReq;
-import com.aliyun.aliinteraction.common.biz.exposable.enums.LiveStatus;
-import com.aliyun.aliinteraction.core.base.Actions;
-import com.aliyun.aliinteraction.enums.BroadcastType;
+import com.alivc.auicommon.common.biz.exposable.enums.LiveStatus;
+import com.alivc.auicommon.core.base.Actions;
 import com.aliyun.aliinteraction.uikit.R;
 import com.aliyun.aliinteraction.uikit.core.BaseComponent;
 import com.aliyun.aliinteraction.uikit.core.ComponentHolder;
@@ -22,6 +20,7 @@ import com.aliyun.auiappserver.model.StopLiveRequest;
 import com.aliyun.auipusher.LiveContext;
 import com.aliyun.auipusher.SimpleLiveEventHandler;
 import com.aliyun.auipusher.config.LiveEvent;
+import com.alivc.auimessage.model.lwp.LeaveGroupRequest;
 
 import java.util.Map;
 
@@ -52,8 +51,8 @@ public class LiveStopComponent extends AppCompatImageView implements ComponentHo
         setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(isFullViewStatus){
-                    component.postEvent(Actions.CHANGE_SAMLL_MODE);
+                if (isFullViewStatus) {
+                    component.postEvent(Actions.CHANGE_SMALL_MODE);
                     return;
                 }
                 component.handleCloseClick();
@@ -83,30 +82,6 @@ public class LiveStopComponent extends AppCompatImageView implements ComponentHo
                     }
                 }
             });
-        }
-        @Override
-        public void onEvent(String action, Object... args) {
-            switch (action) {
-                case Actions.ENTER_ENTERPRISE:
-                    setImageResource(R.drawable.back_arrow);
-                    break;
-                case Actions.IMMERSIVE_PLAYER:
-                    if(args[0].equals(true)){
-                        setVisibility(View.GONE);
-                    }else{
-                        setVisibility(View.VISIBLE);
-                    }
-                    break;
-                case Actions.CHANGE_SAMLL_MODE:
-                    isFullViewStatus = false;
-                    break;
-                case Actions.CHANGE_FULL_MODE:
-                    isFullViewStatus = true;
-                    break;
-
-                default:
-                    break;
-            }
         }
 
         private void handleCloseClick() {
@@ -155,11 +130,11 @@ public class LiveStopComponent extends AppCompatImageView implements ComponentHo
             } else {
                 getPlayerService().destroy();
             }
-            ImLeaveGroupReq req = new ImLeaveGroupReq();
-            req.groupId = liveContext.getGroupId();
-            // 离开房间时, 不扩散消息 (业务接入时, 可根据自身业务诉求来修改)
-            req.broadCastType = BroadcastType.NONE.getValue();
-            interactionService.leaveGroup(req, null);
+
+            LeaveGroupRequest request = new LeaveGroupRequest();
+            request.groupId = getGroupId();
+            getMessageService().getMessageService().leaveGroup(request, null);
+
             activity.finish();
         }
 
@@ -167,6 +142,30 @@ public class LiveStopComponent extends AppCompatImageView implements ComponentHo
         public int getOrder() {
             // 后置回调的优先级, 保证最后处理 interceptBackKey 事件
             return ORDER_STOP;
+        }
+
+        @Override
+        public void onEvent(String action, Object... args) {
+            switch (action) {
+                case Actions.ENTER_ENTERPRISE:
+                    setImageResource(R.drawable.back_arrow);
+                    break;
+                case Actions.IMMERSIVE_PLAYER:
+                    if (args[0].equals(true)) {
+                        setVisibility(View.GONE);
+                    } else {
+                        setVisibility(View.VISIBLE);
+                    }
+                    break;
+                case Actions.CHANGE_SMALL_MODE:
+                    isFullViewStatus = false;
+                    break;
+                case Actions.CHANGE_FULL_MODE:
+                    isFullViewStatus = true;
+                    break;
+                default:
+                    break;
+            }
         }
     }
 }

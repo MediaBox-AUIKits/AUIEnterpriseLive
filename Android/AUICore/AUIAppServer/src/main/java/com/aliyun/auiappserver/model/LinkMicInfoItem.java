@@ -8,7 +8,7 @@ import java.io.Serializable;
  * @author puke
  * @version 2022/9/29
  */
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class LinkMicInfoItem implements Serializable {
 
     public String userId;

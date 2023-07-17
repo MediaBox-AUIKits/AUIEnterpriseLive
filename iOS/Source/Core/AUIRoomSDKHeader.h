@@ -30,6 +30,4 @@
 #import <AliyunPlayer/AliyunPlayer.h>
 #endif
 
-#import <AlivcInteraction/AlivcInteraction.h>
-
 #endif /* AUIRoomSDKHeader_h */

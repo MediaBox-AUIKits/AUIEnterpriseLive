@@ -69,7 +69,7 @@ public class LiveShareComponent extends FrameLayout implements ComponentHolder {
                     panel.setOnClickListener(new OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            showToast("仅展示,需要对接分享功能");
+                            showToast("仅展示，需要对接分享功能");
                         }
                     });
                 }

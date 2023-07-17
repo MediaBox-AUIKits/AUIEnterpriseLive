@@ -12,7 +12,6 @@ import android.graphics.Paint.FontMetrics;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Build.VERSION;
-import androidx.annotation.IntegerRes;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.KeyEvent;
@@ -24,8 +23,10 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.aliyun.aliinteraction.common.base.log.Logger;
-import com.aliyun.aliinteraction.common.base.util.Utils;
+import androidx.annotation.IntegerRes;
+
+import com.alivc.auicommon.common.base.log.Logger;
+import com.alivc.auicommon.common.base.util.Utils;
 import com.aliyun.aliinteraction.uikit.uibase.listener.OnKeyboardVisibilityListener;
 
 import java.lang.ref.WeakReference;
@@ -206,10 +207,10 @@ public class KeyboardUtil {
         final WeakReference<OnKeyboardVisibilityListener> listenerRef = new WeakReference<>(listener);
 
         ViewTreeObserver.OnGlobalLayoutListener layoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
-            private boolean alreadyOpen;
             private final int defaultKeyboardHeightDP = 100;
             private final int EstimatedKeyboardDP = defaultKeyboardHeightDP + (VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? 48 : 0);
             private final Rect rect = new Rect();
+            private boolean alreadyOpen;
 
             @Override
             public void onGlobalLayout() {

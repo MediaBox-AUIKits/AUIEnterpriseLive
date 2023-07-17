@@ -164,7 +164,9 @@
         _notice = [data av_stringValueForKey:@"notice"];
         
         NSString *extendJson = [data av_stringValueForKey:@"extends"];
-        _extends = [NSJSONSerialization JSONObjectWithData:[extendJson dataUsingEncoding:NSUTF8StringEncoding] options:kNilOptions error:nil];
+        if (extendJson.length > 0) {
+            _extends = [extendJson av_jsonDict];
+        }
 
         NSDictionary *metrics_dict = [data av_dictionaryValueForKey:@"metrics"];
         if (metrics_dict) {

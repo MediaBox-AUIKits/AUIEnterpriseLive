@@ -9,23 +9,22 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-    <RelativeLayout
-        android:layout_width="24dp"
-        android:layout_height="18dp"
-        android:background="@color/black"
-        android:layout_marginTop="5dp"
-        android:textColor="#3A3D48"
-        android:textSize="14dp"
-        />
+        <RelativeLayout
+            android:layout_width="24dp"
+            android:layout_height="18dp"
+            android:layout_marginTop="5dp"
+            android:background="@color/black"
+            android:textColor="#3A3D48"
+            android:textSize="14dp" />
 
-    <TextView
-        android:id="@+id/item_content"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/live_message_fly_height"
-        android:gravity="center"
-        android:textColor="#3A3D48"
-        android:textSize="14dp"
-        tools:background="@drawable/ilr_bg_fly_normal"
-        tools:text="liling正在购买" />
+        <TextView
+            android:id="@+id/item_content"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/live_message_fly_height"
+            android:gravity="center"
+            android:textColor="#3A3D48"
+            android:textSize="14dp"
+            tools:background="@drawable/ilr_bg_fly_normal"
+            tools:text="liling正在购买" />
     </LinearLayout>
 </FrameLayout>

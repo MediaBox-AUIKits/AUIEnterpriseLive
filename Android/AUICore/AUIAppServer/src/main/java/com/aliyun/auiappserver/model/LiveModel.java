@@ -1,12 +1,10 @@
 package com.aliyun.auiappserver.model;
 
-import android.text.TextUtils;
-
 import androidx.annotation.Nullable;
 
-import com.aliyun.aliinteraction.common.base.util.CollectionUtil;
-import com.aliyun.aliinteraction.common.base.util.Utils;
-import com.aliyun.aliinteraction.common.biz.exposable.enums.LiveStatus;
+import com.alivc.auicommon.common.base.util.CollectionUtil;
+import com.alivc.auicommon.common.base.util.Utils;
+import com.alivc.auicommon.common.biz.exposable.enums.LiveStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;

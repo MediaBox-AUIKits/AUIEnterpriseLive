@@ -12,7 +12,6 @@ import androidx.fragment.app.Fragment;
 
 /**
  * 适配软键盘弹出问题
- *
  */
 class FitsKeyboard implements ViewTreeObserver.OnGlobalLayoutListener {
 

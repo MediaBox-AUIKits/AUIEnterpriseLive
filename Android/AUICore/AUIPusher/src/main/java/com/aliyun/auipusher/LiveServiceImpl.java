@@ -2,7 +2,7 @@ package com.aliyun.auipusher;
 
 import android.content.Context;
 
-import com.aliyun.aliinteraction.common.base.EventHandlerManager;
+import com.alivc.auicommon.common.base.EventHandlerManager;
 import com.aliyun.auiappserver.model.LiveModel;
 
 public class LiveServiceImpl extends EventHandlerManager<LiveEventHandler> implements LiveService {

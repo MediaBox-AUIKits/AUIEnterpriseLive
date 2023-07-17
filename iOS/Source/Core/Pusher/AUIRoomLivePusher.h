@@ -41,6 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 @property (assign, nonatomic, class) BOOL canRtsPush; // 是否使用rts进行推送，默认为YES
+@property (assign, nonatomic, class) AlivcLivePushFPS pushFPS; // 推流FPS
 
 
 - (void)prepare;

@@ -2,7 +2,6 @@ package com.aliyun.aliinteraction.uikit.uibase.util.immersionbar;
 
 /**
  * 软键盘监听
- *
  */
 public interface OnKeyboardListener {
     /**

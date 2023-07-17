@@ -14,6 +14,7 @@
 @property (strong, nonatomic) AliPlayer *player;
 @property (assign, nonatomic) BOOL startCompleted;
 @property (assign, nonatomic) BOOL playOnError;
+@property (assign, nonatomic) BOOL isDestroy;
 
 @property (assign, nonatomic) BOOL playRts;
 @property (assign, nonatomic) BOOL canRts;
@@ -95,6 +96,8 @@ static BOOL g_canRtsPull = YES;
     _player.autoPlay = YES;
     _player.scalingMode = self.scaleAspectFit ?  AVP_SCALINGMODE_SCALEASPECTFIT : AVP_SCALINGMODE_SCALEASPECTFILL;
     [_player setPlayerView:self.displayView.renderView];
+    
+    self.isDestroy = NO;
 }
 
 - (BOOL)start {
@@ -156,12 +159,14 @@ static BOOL g_canRtsPull = YES;
 }
 
 - (void)destory {
+    NSLog(@"cdn拉流：停止与释放实例");
     [_player stop];
     [_player clearScreen];
     _player.playerView = nil;
     [_player destroy];
     _player = nil;
     self.startCompleted = NO;
+    self.isDestroy = YES;
 }
 
 #pragma mark - AVPDelegate
@@ -205,33 +210,40 @@ static BOOL g_canRtsPull = YES;
 - (void)onError:(AliPlayer *)player errorModel:(AVPErrorModel *)errorModel {
     NSLog(@"cdn拉流：播放出错(%tu, %@)", errorModel.code, errorModel.message);
 
-    if (self.playRts) {
-        NSLog(@"cdn拉流：rts播放失败，使用flv进行播放");
-        self.playRts = NO;
-        [self destory];
-        [self prepare];
-        [self start];
-        return;
-    }
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
 
-    self.playOnError = YES;
-    NSLog(@"cdn拉流：使用flv播放失败，是否重试");
-
-    NSString *title = @"直播中断，您可尝试再次拉流";
-    [AVAlertController showWithTitle:nil message:title cancelTitle:@"取消" okTitle:@"重试" onCompleted:^(BOOL isCanced) {
-        if (!isCanced) {
-            NSLog(@"cdn拉流：开始重试");
-            self.playRts = self.canRts;
+        if (self.isDestroy) {
+            [self.displayView endLoading];
+            return;
+        }
+        
+        if (self.playRts) {
+            NSLog(@"cdn拉流：rts播放失败，使用flv进行播放");
+            self.playRts = NO;
             [self destory];
             [self prepare];
             [self start];
+            return;
         }
-    }];
-    
-    [self.displayView endLoading];
-    if (self.onPlayErrorBlock) {
-        self.onPlayErrorBlock();
-    }
+
+        self.playOnError = YES;
+        NSLog(@"cdn拉流：使用flv播放失败，是否重试");
+        NSString *title = @"直播中断，您可尝试再次拉流";
+        [AVAlertController showWithTitle:nil message:title cancelTitle:@"取消" okTitle:@"重试" onCompleted:^(BOOL isCanced) {
+            if (!isCanced) {
+                NSLog(@"cdn拉流：开始重试");
+                self.playRts = self.canRts;
+                [self destory];
+                [self prepare];
+                [self start];
+            }
+        }];
+        
+        [self.displayView endLoading];
+        if (self.onPlayErrorBlock) {
+            self.onPlayErrorBlock();
+        }
+    });
 }
 
 /*

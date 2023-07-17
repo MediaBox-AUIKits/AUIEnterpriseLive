@@ -4,10 +4,11 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.net.Uri;
-import androidx.annotation.Nullable;
 import android.text.TextUtils;
 
-import com.aliyun.aliinteraction.common.base.AppContext;
+import androidx.annotation.Nullable;
+
+import com.alivc.auicommon.common.base.AppContext;
 
 /**
  * 剪切板工具类, 提供复制、粘贴功能

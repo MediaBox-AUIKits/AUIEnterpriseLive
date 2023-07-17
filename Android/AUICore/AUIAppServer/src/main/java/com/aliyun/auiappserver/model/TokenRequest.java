@@ -9,7 +9,7 @@ import java.io.Serializable;
  * @author puke
  * @version 2022/8/25
  */
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TokenRequest implements Serializable {
 
     @JsonProperty("user_id")

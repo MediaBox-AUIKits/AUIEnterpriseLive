@@ -1,8 +1,8 @@
 package com.aliyun.aliinteraction.uikit.core;
 
-import com.aliyun.aliinteraction.core.assist.Assist;
-import com.aliyun.aliinteraction.core.assist.Config;
-import com.aliyun.aliinteraction.core.assist.Property;
+import com.alivc.auicommon.core.assist.Assist;
+import com.alivc.auicommon.core.assist.Config;
+import com.alivc.auicommon.core.assist.Property;
 
 import java.io.Serializable;
 

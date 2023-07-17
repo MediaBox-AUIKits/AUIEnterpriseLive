@@ -1,6 +1,6 @@
 package com.aliyun.auipusher;
 
-import com.aliyun.aliinteraction.common.base.exposable.IEventHandlerManager;
+import com.alivc.auicommon.common.base.exposable.IEventHandlerManager;
 import com.aliyun.auiappserver.model.LiveModel;
 
 public interface LiveService extends IEventHandlerManager<LiveEventHandler> {

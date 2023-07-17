@@ -2,7 +2,6 @@ package com.aliyun.aliinteraction.uikit.uibase.util.immersionbar;
 
 /**
  * bar的状态
- *
  */
 public enum BarHide {
     /**

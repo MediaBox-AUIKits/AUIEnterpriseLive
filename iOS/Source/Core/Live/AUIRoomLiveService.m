@@ -10,21 +10,70 @@
 #import "AUIRoomAccount.h"
 #import "AUIRoomMessageService.h"
 
+typedef NS_ENUM(NSUInteger, AUIRoomMessageType) {
+    AUIRoomMessageTypeStartLive = 10003,
+    AUIRoomMessageTypeStopLive,
+    AUIRoomMessageTypeLiveInfo,
+    AUIRoomMessageTypeNotice,
+    
+    AUIRoomMessageTypeApplyLinkMic = 20001,
+    AUIRoomMessageTypeResponseLinkMic,
+    AUIRoomMessageTypeJoinLinkMic,
+    AUIRoomMessageTypeLeaveLinkMic,
+    AUIRoomMessageTypeKickoutLinkMic,
+    AUIRoomMessageTypeCancelApplyLinkMic,
+    AUIRoomMessageTypeMicOpened,
+    AUIRoomMessageTypeCameraOpened,
+    AUIRoomMessageTypeNeedOpenMic,
+    AUIRoomMessageTypeNeedOpenCamera,
+    
+    AUIRoomMessageTypeGift = 30001,
+};
+
+@implementation AUIRoomGiftModel
+
+- (instancetype)initWithData:(NSDictionary *)data {
+    self = [super init];
+    if (self) {
+        _giftId = [data objectForKey:@"id"];
+        _name = [data objectForKey:@"name"];
+        _desc = [data objectForKey:@"description"];
+        _imageUrl = [data objectForKey:@"imageUrl"];
+    }
+    return self;
+}
+
+- (NSDictionary *)toData {
+    return @{
+        @"id":_giftId ?: @"",
+        @"name":_name ?: @"",
+        @"description":_desc ?: @"",
+        @"imageUrl":_imageUrl ?: @"",
+    };
+}
+
+@end
+
+
 @interface AUIRoomLiveService () <AUIRoomMessageServiceObserver>
 
 @property (strong, nonatomic) AUIRoomLiveInfoModel *liveInfoModel;
-@property (strong, nonatomic) AUIRoomMessageService *messageService;
+@property (strong, nonatomic) id<AUIRoomMessageServiceProtocol> messageService;
 
 @property (assign, nonatomic) NSInteger pv;
 @property (assign, nonatomic) BOOL isJoined;
 
 @property (assign, nonatomic) BOOL isMuteAll;
-@property (assign, nonatomic) BOOL isMuteByAuchor;
 
 @property (nonatomic, strong) NSTimer *sendLikeTimer;
 @property (assign, nonatomic) NSInteger allLikeCount;
 @property (assign, nonatomic) NSInteger likeCountWillSend;
 @property (assign, nonatomic) NSInteger likeCountToSend;
+
+@property (assign, nonatomic) BOOL pvNeedUpdate;
+@property (assign, nonatomic) BOOL pvIsUpdating;
+@property (assign, nonatomic) NSTimeInterval pvLastUpdateTime;
+
 
 @property (copy, nonatomic) NSString *notice;
 
@@ -46,28 +95,24 @@
 
 - (void)enterRoom:(void(^)(BOOL))completed {
     __weak typeof(self) weakSelf = self;
-    [self.messageService joinGroup:self.liveInfoModel.chat_id extension:nil onSuccess:^{
-        weakSelf.isJoined = YES;
-        if (completed) {
-            completed(YES);
+    [self.messageService joinGroup:self.liveInfoModel.chat_id completed:^(NSError * _Nullable error) {
+        if (!error) {
+            weakSelf.isJoined = YES;
         }
-    } onFailure:^(NSError * _Nonnull error) {
         if (completed) {
-            completed(NO);
+            completed(error == nil);
         }
     }];
 }
 
 - (void)leaveRoom:(void(^)(BOOL))completed {
     __weak typeof(self) weakSelf = self;
-    [self.messageService leaveGroup:self.liveInfoModel.chat_id onSuccess:^{
-        weakSelf.isJoined = NO;
-        if (completed) {
-            completed(YES);
+    [self.messageService leaveGroup:self.liveInfoModel.chat_id completed:^(NSError * _Nullable error) {
+        if (!error) {
+            weakSelf.isJoined = NO;
         }
-    } onFailure:^(NSError * _Nonnull error) {
         if (completed) {
-            completed(NO);
+            completed(error == nil);
         }
     }];
 }
@@ -87,14 +132,10 @@
             if (completed) {
                 completed(NO);
             }
+            return;
         }
         [self.liveInfoModel updateStatus:model.status];
-        NSDictionary *msg = @{};
-        [self sendMessage:msg type:AUIRoomMessageTypeStartLive uids:nil skipMuteCheck:YES skipAudit:YES completed:^(BOOL success) {
-            if (completed) {
-                completed(success);
-            }
-        }];
+        [self sendData:nil type:AUIRoomMessageTypeStartLive receiverId:nil completed:completed];
     }];
 }
 
@@ -110,6 +151,7 @@
         if (completed) {
             completed(YES);
         }
+        return;
     }
     
     [AUIRoomAppServer stopLive:self.liveInfoModel.live_id ?: @"" completed:^(AUIRoomLiveInfoModel * _Nullable model, NSError * _Nullable error) {
@@ -117,14 +159,10 @@
             if (completed) {
                 completed(NO);
             }
+            return;
         }
         [self.liveInfoModel updateStatus:model.status];
-        NSDictionary *msg = @{};
-        [self sendMessage:msg type:AUIRoomMessageTypeStopLive uids:nil skipMuteCheck:YES skipAudit:YES completed:^(BOOL success) {
-            if (completed) {
-                completed(success);
-            }
-        }];
+        [self sendData:nil type:AUIRoomMessageTypeStopLive receiverId:nil completed:completed];
     }];
 }
 
@@ -138,40 +176,16 @@
         return;
     }
     __weak typeof(self) weakSelf = self;
-    [self.messageService queryMuteAll:self.liveInfoModel.chat_id onSuccess:^(BOOL isMuteAll) {
+    [self.messageService queryMuteAll:self.liveInfoModel.chat_id completed:^(BOOL isMuteAll, NSError * _Nullable error) {
+        if (error) {
+            if (completed) {
+                completed(NO);
+            }
+            return;
+        }
         weakSelf.isMuteAll = isMuteAll;
         if (completed) {
             completed(YES);
-        }
-    } onFailure:^(NSError * _Nonnull error) {
-        if (completed) {
-            completed(NO);
-        }
-    }];
-}
-
-- (void)queryMuteByAnchor:(void (^)(BOOL))completed {
-    if (!self.isJoined) {
-        if (completed) {
-            completed(NO);
-        }
-        return;
-    }
-    __weak typeof(self) weakSelf = self;
-    [self.messageService listMuteUsers:self.liveInfoModel.chat_id onSuccess:^(NSArray<NSString *> * _Nonnull ids) {
-        weakSelf.isMuteByAuchor = NO;
-        [ids enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-            if ([AUIRoomAccount.me.userId isEqualToString:obj]) {
-                weakSelf.isMuteByAuchor = YES;
-                *stop = YES;
-            }
-        }];
-        if (completed) {
-            completed(YES);
-        }
-    } onFailure:^(NSError * _Nonnull error) {
-        if (completed) {
-            completed(NO);
         }
     }];
 }
@@ -184,14 +198,16 @@
         return;
     }
     __weak typeof(self) weakSelf = self;
-    [self.messageService muteAll:self.liveInfoModel.chat_id onSuccess:^{
+    [self.messageService muteAll:self.liveInfoModel.chat_id completed:^(NSError * _Nullable error) {
+        if (error) {
+            if (completed) {
+                completed(NO);
+            }
+            return;
+        }
         weakSelf.isMuteAll = YES;
         if (completed) {
             completed(YES);
-        }
-    } onFailure:^(NSError * _Nonnull error) {
-        if (completed) {
-            completed(NO);
         }
     }];
 }
@@ -204,14 +220,16 @@
         return;
     }
     __weak typeof(self) weakSelf = self;
-    [self.messageService cancelMuteAll:self.liveInfoModel.chat_id onSuccess:^{
+    [self.messageService cancelMuteAll:self.liveInfoModel.chat_id completed:^(NSError * _Nullable error) {
+        if (error) {
+            if (completed) {
+                completed(NO);
+            }
+            return;
+        }
         weakSelf.isMuteAll = NO;
         if (completed) {
             completed(YES);
-        }
-    } onFailure:^(NSError * _Nonnull error) {
-        if (completed) {
-            completed(NO);
         }
     }];
 }
@@ -229,11 +247,7 @@
         if (!error) {
             self.notice = notice;
             NSDictionary *msg = @{@"notice":notice?:@""};
-            [self sendMessage:msg type:AUIRoomMessageTypeNotice uids:nil skipMuteCheck:YES skipAudit:YES completed:^(BOOL success) {
-                if (completed) {
-                    completed(success);
-                }
-            }];
+            [self sendData:[[AUIMessageDefaultData alloc] initWithData:msg] type:AUIRoomMessageTypeNotice receiverId:nil completed:completed];
         }
         if (completed) {
             completed(!error);
@@ -259,13 +273,9 @@
         }
         return;
     }
-    [self.messageService sendLike:self.liveInfoModel.chat_id count:count onSuccess:^{
+    [self.messageService sendLike:self.liveInfoModel.chat_id count:count completed:^(NSError * _Nullable error) {
         if (completed) {
-            completed(YES);
-        }
-    } onFailure:^(NSError * _Nonnull error) {
-        if (completed) {
-            completed(NO);
+            completed(error == nil);
         }
     }];
 }
@@ -305,6 +315,38 @@
     }
 }
 
+#pragma mark - PV
+
+- (void)fetchPV {
+#if !__has_include(<AlivcInteraction/AlivcInteraction.h>)
+    // 如果不使用阿里云的互动消息SDK，那么需要在通过接口更新PV，PV的统计需要在api/v1/live/getStatistics接口实现
+    self.pvNeedUpdate = YES;
+    if (self.pvIsUpdating) {
+        return;
+    }
+    __weak typeof(self) weakSelf = self;
+    [AUIRoomAppServer fetchStatistics:self.liveInfoModel.live_id completed:^(AUIRoomLiveMetricsModel * _Nullable model, NSError * _Nullable error) {
+        
+        if (model) {
+            NSInteger pv = model.pv;
+            if (pv > weakSelf.pv) {
+                weakSelf.pv = pv;
+                if (weakSelf.onReceivedPV) {
+                    weakSelf.onReceivedPV(weakSelf.pv);
+                }
+            }
+        }
+        
+        weakSelf.pvIsUpdating = NO;
+        if (weakSelf.pvNeedUpdate) {
+            [weakSelf fetchPV];
+        }
+    }];
+    self.pvIsUpdating = YES;
+    self.pvNeedUpdate = NO;
+#endif
+}
+
 #pragma mark - Gift
 
 - (void)sendGift:(AUIRoomGiftModel *)gift completed:(void(^)(BOOL))completed {
@@ -314,7 +356,8 @@
         }
         return;
     }
-    [self sendData:gift type:AUIRoomMessageTypeGift uids:@[self.liveInfoModel.anchor_id] skipMuteCheck:YES skipAudit:YES completed:completed];
+    
+    [self sendData:gift type:AUIRoomMessageTypeGift receiverId:self.liveInfoModel.anchor_id completed:completed];
 }
 
 #pragma mark - Pusher state
@@ -328,11 +371,7 @@
     }
     
     NSDictionary *msg = @{@"cameraOpened":@(opened)};
-    [self sendMessage:msg type:AUIRoomMessageTypeCameraOpened uids:nil skipMuteCheck:YES skipAudit:YES completed:^(BOOL success) {
-        if (completed) {
-            completed(success);
-        }
-    }];
+    [self sendData:[[AUIMessageDefaultData alloc] initWithData:msg] type:AUIRoomMessageTypeCameraOpened receiverId:nil completed:completed];
 }
 
 - (void)sendMicOpened:(BOOL)opened completed:(void (^)(BOOL))completed {
@@ -344,11 +383,7 @@
     }
     
     NSDictionary *msg = @{@"micOpened":@(opened)};
-    [self sendMessage:msg type:AUIRoomMessageTypeMicOpened uids:nil skipMuteCheck:YES skipAudit:YES completed:^(BOOL success) {
-        if (completed) {
-            completed(success);
-        }
-    }];
+    [self sendData:[[AUIMessageDefaultData alloc] initWithData:msg] type:AUIRoomMessageTypeMicOpened receiverId:nil completed:completed];
 }
 
 - (void)sendOpenCamera:(NSString *)userId needOpen:(BOOL)needOpen completed:(void (^)(BOOL))completed {
@@ -359,11 +394,7 @@
         return;
     }
     NSDictionary *msg = @{@"needOpenCamera":@(needOpen)};
-    [self sendMessage:msg type:AUIRoomMessageTypeNeedOpenCamera uids:@[userId] skipMuteCheck:YES skipAudit:YES completed:^(BOOL success) {
-        if (completed) {
-            completed(success);
-        }
-    }];
+    [self sendData:[[AUIMessageDefaultData alloc] initWithData:msg] type:AUIRoomMessageTypeNeedOpenCamera receiverId:userId completed:completed];
 }
 
 - (void)sendOpenMic:(NSString *)userId needOpen:(BOOL)needOpen completed:(void (^)(BOOL))completed {
@@ -374,11 +405,7 @@
         return;
     }
     NSDictionary *msg = @{@"needOpenMic":@(needOpen)};
-    [self sendMessage:msg type:AUIRoomMessageTypeNeedOpenMic uids:@[userId] skipMuteCheck:YES skipAudit:YES completed:^(BOOL success) {
-        if (completed) {
-            completed(success);
-        }
-    }];
+    [self sendData:[[AUIMessageDefaultData alloc] initWithData:msg] type:AUIRoomMessageTypeNeedOpenMic receiverId:userId completed:completed];
 }
 
 #pragma mark - Comment
@@ -395,39 +422,27 @@
         if (completed) {
             completed(NO);
         }
+        return;
     }
+    
     NSDictionary *msg = @{
         @"content":comment,
     };
-    [self sendMessage:msg type:AUIRoomMessageTypeComment uids:nil skipMuteCheck:NO skipAudit:NO completed:^(BOOL success) {
+    [self.messageService sendComment:self.liveInfoModel.chat_id comment:msg completed:^(NSError * _Nullable error) {
         if (completed) {
-            completed(success);
+            completed(error == nil);
         }
     }];
 }
 
 #pragma mark - Message
 
-- (void)sendMessage:(NSDictionary *)content type:(AUIRoomMessageType)type uids:(NSArray<NSString *> *)uids skipMuteCheck:(BOOL)skipMuteCheck skipAudit:(BOOL)skipAudit completed:(void (^)(BOOL))completed {
-    if (content == nil) {
-        content = @{};
-    }
-    NSString *json = [self jsonStringWithDict:content];
-
-    [self.messageService sendTextMessage:self.liveInfoModel.chat_id userIDs:uids message:json type:type skipMuteCheck:skipMuteCheck skipAudit:skipAudit onSuccess:^{
+- (void)sendData:(id<AUIMessageDataProtocol>)data type:(NSInteger)type receiverId:(NSString *)receiverId completed:(void (^)(BOOL))completed {
+    [self.messageService sendCommand:type data:data groupID:self.liveInfoModel.chat_id receiverId:receiverId completed:^(NSError * _Nullable error) {
         if (completed) {
-            completed(YES);
-        }
-    } onFailure:^(NSError * _Nonnull error) {
-        if (completed) {
-            completed(NO);
+            completed(error == nil);
         }
     }];
-}
-
-- (void)sendData:(id<AUIRoomCustomMessageData>)data type:(AUIRoomMessageType)type uids:(NSArray<NSString *> *)uids skipMuteCheck:(BOOL)skipMuteCheck skipAudit:(BOOL)skipAudit completed:(void (^)(BOOL))completed {
-    NSDictionary *content = [data toData];
-    [self sendMessage:content type:type uids:uids skipMuteCheck:skipMuteCheck skipAudit:skipAudit completed:completed];
 }
 
 #pragma mark - link mic
@@ -448,13 +463,7 @@
         return;
     }
     
-    NSDictionary *msg = @{
-    };
-    [self sendMessage:msg type:AUIRoomMessageTypeApplyLinkMic uids:@[uid] skipMuteCheck:YES skipAudit:YES completed:^(BOOL success) {
-        if (completed) {
-            completed(success);
-        }
-    }];
+    [self sendData:nil type:AUIRoomMessageTypeApplyLinkMic receiverId:uid completed:completed];
 }
 
 - (void)sendCancelApplyLinkMic:(NSString *)uid completed:(void (^)(BOOL))completed {
@@ -473,13 +482,7 @@
         return;
     }
     
-    NSDictionary *msg = @{
-    };
-    [self sendMessage:msg type:AUIRoomMessageTypeCancelApplyLinkMic uids:@[uid] skipMuteCheck:YES skipAudit:YES completed:^(BOOL success) {
-        if (completed) {
-            completed(success);
-        }
-    }];
+    [self sendData:nil type:AUIRoomMessageTypeCancelApplyLinkMic receiverId:uid completed:completed];
 }
 
 - (void)sendResponseLinkMic:(NSString *)uid agree:(BOOL)agree pullUrl:(NSString *)pullUrl completed:(void (^)(BOOL))completed {
@@ -494,11 +497,7 @@
     if (agree) {
         [msg setObject:pullUrl?:@"" forKey:@"rtcPullUrl"];
     }
-    [self sendMessage:msg type:AUIRoomMessageTypeResponseLinkMic uids:@[uid] skipMuteCheck:YES skipAudit:YES completed:^(BOOL success) {
-        if (completed) {
-            completed(success);
-        }
-    }];
+    [self sendData:[[AUIMessageDefaultData alloc] initWithData:msg] type:AUIRoomMessageTypeResponseLinkMic receiverId:uid completed:completed];
 }
 
 - (void)sendJoinLinkMic:(NSString *)pullUrl completed:(void (^)(BOOL))completed {
@@ -512,11 +511,7 @@
     NSDictionary *msg = @{
         @"rtcPullUrl":pullUrl?:@"",
     };
-    [self sendMessage:msg type:AUIRoomMessageTypeJoinLinkMic uids:nil skipMuteCheck:YES skipAudit:YES completed:^(BOOL success) {
-        if (completed) {
-            completed(success);
-        }
-    }];
+    [self sendData:[[AUIMessageDefaultData alloc] initWithData:msg] type:AUIRoomMessageTypeJoinLinkMic receiverId:nil completed:completed];
 }
 
 - (void)sendLeaveLinkMic:(BOOL)byKickout completed:(void (^)(BOOL))completed {
@@ -530,11 +525,7 @@
     NSDictionary *msg = @{
         @"reason":byKickout ? @"byKickout" : @"bySelf"
     };
-    [self sendMessage:msg type:AUIRoomMessageTypeLeaveLinkMic uids:nil skipMuteCheck:YES skipAudit:YES completed:^(BOOL success) {
-        if (completed) {
-            completed(success);
-        }
-    }];
+    [self sendData:[[AUIMessageDefaultData alloc] initWithData:msg]  type:AUIRoomMessageTypeLeaveLinkMic receiverId:nil completed:completed];
 }
 
 - (void)sendKickoutLinkMic:(NSString *)uid completed:(void (^)(BOOL))completed {
@@ -545,13 +536,7 @@
         return;
     }
     
-    NSDictionary *msg = @{
-    };
-    [self sendMessage:msg type:AUIRoomMessageTypeKickoutLinkMic uids:@[uid] skipMuteCheck:YES skipAudit:YES completed:^(BOOL success) {
-        if (completed) {
-            completed(success);
-        }
-    }];
+    [self sendData:nil type:AUIRoomMessageTypeKickoutLinkMic receiverId:uid completed:completed];
 }
 
 static NSUInteger g_maxLinkMicCount = 6;
@@ -616,24 +601,25 @@ static NSUInteger g_maxLinkMicCount = 6;
     return self;
 }
 
+- (AUIRoomUser *)userFromMessageUserInfo:(AUIMessageUserInfo *)msgUserInfo {
+    AUIRoomUser *user = [AUIRoomUser new];
+    user.userId = msgUserInfo.userId;
+    user.nickName = msgUserInfo.userNick;
+    user.avatar = msgUserInfo.userAvatar;
+    return user;
+}
+
 #pragma mark - AUIRoomMessageServiceObserver
 
 - (NSString *)groupId {
     return self.liveInfoModel.chat_id;
 }
 
-- (void)onCustomMessageReceived:(AUIRoomMessageModel *)message {
+- (void)onCommandReceived:(AUIMessageModel *)message {
     
-    AUIRoomUser *sender = message.sender;
+    AUIRoomUser *sender = [self userFromMessageUserInfo:message.sender];
     NSDictionary *data = message.data;
 
-    if (message.msgType == AUIRoomMessageTypeComment) {
-        if (self.onReceivedComment) {
-            NSString *comment = [data objectForKey:@"content"];
-            self.onReceivedComment(sender, comment);
-        }
-        return;
-    }
     if (message.msgType == AUIRoomMessageTypeStartLive) {
         if (self.onReceivedStartLive) {
             self.onReceivedStartLive(sender);
@@ -733,66 +719,57 @@ static NSUInteger g_maxLinkMicCount = 6;
     }
 }
 
-- (void)onLikeReceived:(AUIRoomMessageModel *)message {
-    NSInteger likeCount = [[message.data objectForKey:@"likeCount"] integerValue];
-    if (likeCount > self.allLikeCount) {
-        self.allLikeCount = likeCount;
-        if (self.onReceivedLike) {
-            self.onReceivedLike(message.sender, self.allLikeCount);
+- (void)onPVReceived:(AUIMessageModel *)message {
+    NSInteger pv = [[message.data objectForKey:@"pv"] integerValue];
+    if (pv > self.pv) {
+        self.pv = pv;
+        if (self.onReceivedPV) {
+            self.onReceivedPV(self.pv);
         }
     }
 }
 
-- (void)onJoinGroup:(AUIRoomMessageModel *)message {
-    AUIRoomUser *sender = message.sender;
-    NSDictionary *data = message.data;
-    NSDictionary *stat = [data objectForKey:@"statistics"];
-    
-    NSInteger likeCount = [[data objectForKey:@"likeCount"] integerValue];
+- (void)onLikeReceived:(AUIMessageModel *)message {
+    AUIRoomUser *sender = [self userFromMessageUserInfo:message.sender];
+    NSInteger likeCount = [[message.data objectForKey:@"likeCount"] integerValue];
     if (likeCount > self.allLikeCount) {
         self.allLikeCount = likeCount;
         if (self.onReceivedLike) {
             self.onReceivedLike(sender, self.allLikeCount);
         }
     }
-    
-    NSInteger pv = [[stat objectForKey:@"pv"] integerValue];
-    if (pv > self.pv) {
-        self.pv = pv;
-        if (self.onReceivedPV) {
-            self.onReceivedPV(sender, self.pv);
-        }
-    }
-    
-    if (self.onReceivedJoinGroup) {
-        self.onReceivedJoinGroup(sender, stat);
+}
+
+- (void)onCommentReceived:(AUIMessageModel *)message {
+    AUIRoomUser *sender = [self userFromMessageUserInfo:message.sender];
+    NSDictionary *data = message.data;
+
+    if (self.onReceivedComment) {
+        NSString *comment = [data objectForKey:@"content"];
+        self.onReceivedComment(sender, comment);
     }
 }
 
-- (void)onLeaveGroup:(AUIRoomMessageModel *)message {
+- (void)onJoinGroup:(AUIMessageModel *)message {
+    [self fetchPV];
+}
+
+- (void)onLeaveGroup:(AUIMessageModel *)message {
     
 }
 
-- (void)onMuteGroup:(AUIRoomMessageModel *)message {
+- (void)onMuteGroup:(AUIMessageModel *)message {
     self.isMuteAll = YES;
     if (self.onReceivedMuteAll) {
         self.onReceivedMuteAll(self.isMuteAll);
     }
 }
 
-- (void)onCancelMuteGroup:(AUIRoomMessageModel *)message {
+- (void)onCancelMuteGroup:(AUIMessageModel *)message {
     self.isMuteAll = NO;
     if (self.onReceivedMuteAll) {
         self.onReceivedMuteAll(self.isMuteAll);
     }
-}
-
-- (void)onMuteUser:(AUIRoomMessageModel *)message {
-    ;
-}
-
-- (void)onCancelMuteUser:(AUIRoomMessageModel *)message {
-    ;
 }
 
 @end

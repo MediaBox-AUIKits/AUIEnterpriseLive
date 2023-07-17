@@ -10,23 +10,18 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.alibaba.dingpaas.interaction.ImCancelMuteAllReq;
-import com.alibaba.dingpaas.interaction.ImCancelMuteAllRsp;
-import com.alibaba.dingpaas.interaction.ImGetGroupStatisticsRsp;
-import com.alibaba.dingpaas.interaction.ImMuteAllReq;
-import com.alibaba.dingpaas.interaction.ImMuteAllRsp;
-import com.aliyun.aliinteraction.base.Callback;
-import com.aliyun.aliinteraction.base.Error;
-import com.aliyun.aliinteraction.core.base.Actions;
-import com.aliyun.aliinteraction.enums.BroadcastType;
+import com.alivc.auicommon.core.base.Actions;
 import com.aliyun.aliinteraction.uikit.R;
 import com.aliyun.aliinteraction.uikit.core.BaseComponent;
 import com.aliyun.aliinteraction.uikit.core.ComponentHolder;
 import com.aliyun.aliinteraction.uikit.core.IComponent;
-import com.aliyun.auiappserver.model.LiveModel;
-import com.aliyun.auiappserver.ClickLookUtils;
 import com.aliyun.aliinteraction.uikit.uibase.util.DialogUtil;
+import com.aliyun.auiappserver.ClickLookUtils;
+import com.aliyun.auiappserver.model.LiveModel;
 import com.aliyun.auipusher.LivePusherService;
+import com.alivc.auimessage.listener.InteractionCallback;
+import com.alivc.auimessage.model.base.InteractionError;
+import com.alivc.auimessage.model.lwp.GroupMuteStatusResponse;
 
 /**
  * @author puke
@@ -115,14 +110,14 @@ public class LiveMoreComponent extends FrameLayout implements ComponentHolder {
         dialog.findViewById(R.id.live_tool_ban_all).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                component.handleBanAll(view);
+                component.handleBanAll();
             }
         });
         dialog.findViewById(R.id.live_tool_close_camera).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
                 isCloseCamera = !isCloseCamera;
-                ((TextView)view.findViewById(R.id.live_tool_camera_txt)).setText(isCloseCamera ? "关闭摄像头" : "开启摄像头");
+                ((TextView) view.findViewById(R.id.live_tool_camera_txt)).setText(isCloseCamera ? "关闭摄像头" : "开启摄像头");
 
                 // 连麦场景, 通知观众自己的推流状态
                 if (component.supportLinkMic()) {
@@ -185,40 +180,34 @@ public class LiveMoreComponent extends FrameLayout implements ComponentHolder {
             setVisibility(showMore ? VISIBLE : GONE);
         }
 
-        private void handleBanAll(final View view) {
+        private void handleBanAll() {
             if (isMuteGroupAll) {
-                ImCancelMuteAllReq req = new ImCancelMuteAllReq();
-                req.groupId = getGroupId();
-                req.broadCastType = BroadcastType.ALL.getValue();
-                interactionService.cancelMuteAll(req, new Callback<ImCancelMuteAllRsp>() {
+                component.getMessageService().cancelMuteAll(new InteractionCallback<Boolean>() {
                     @Override
-                    public void onSuccess(ImCancelMuteAllRsp rsp) {
+                    public void onSuccess(Boolean data) {
                         isMuteGroupAll = false;
                         changeBandAllUI();
                     }
 
                     @Override
-                    public void onError(Error error) {
-                        showToast("取消全员禁言失败, " + error.msg);
+                    public void onError(InteractionError interactionError) {
+                        showToast("取消全员禁言失败, " + interactionError);
                     }
                 });
             } else {
                 DialogUtil.confirm(activity, "是否开启全员禁言？", new Runnable() {
                     @Override
                     public void run() {
-                        ImMuteAllReq req = new ImMuteAllReq();
-                        req.groupId = Component.this.getGroupId();
-                        req.broadCastType = BroadcastType.ALL.getValue();
-                        interactionService.muteAll(req, new Callback<ImMuteAllRsp>() {
+                        component.getMessageService().muteAll(new InteractionCallback<Boolean>() {
                             @Override
-                            public void onSuccess(ImMuteAllRsp rsp) {
+                            public void onSuccess(Boolean data) {
                                 isMuteGroupAll = true;
                                 changeBandAllUI();
                             }
 
                             @Override
-                            public void onError(Error error) {
-                                showToast("全员禁言失败, " + error.msg);
+                            public void onError(InteractionError interactionError) {
+                                showToast("全员禁言失败, " + interactionError);
                             }
                         });
                     }
@@ -229,9 +218,9 @@ public class LiveMoreComponent extends FrameLayout implements ComponentHolder {
         @Override
         public void onEvent(String action, Object... args) {
             if (Actions.GET_GROUP_STATISTICS_SUCCESS.equals(action)) {
-                if (args.length > 0 && args[0] instanceof ImGetGroupStatisticsRsp) {
-                    ImGetGroupStatisticsRsp groupRsp = (ImGetGroupStatisticsRsp) args[0];
-                    isMuteGroupAll = groupRsp.isMuteAll;
+                if (args.length > 0 && args[0] instanceof GroupMuteStatusResponse) {
+                    GroupMuteStatusResponse groupMuteStatusResponse = (GroupMuteStatusResponse) args[0];
+                    isMuteGroupAll = groupMuteStatusResponse.mute;
                     changeBandAllUI();
                 }
             }

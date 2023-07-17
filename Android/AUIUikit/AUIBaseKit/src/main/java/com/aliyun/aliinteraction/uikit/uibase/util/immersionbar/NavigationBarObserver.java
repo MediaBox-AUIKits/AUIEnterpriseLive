@@ -13,20 +13,19 @@ import java.util.ArrayList;
 
 /**
  * 导航栏显示隐藏处理，目前只支持emui和miui带有导航栏的手机
- *
  */
-final class NavigationBarObserver extends ContentObserver implements Constants{
+final class NavigationBarObserver extends ContentObserver implements Constants {
 
     private ArrayList<OnNavigationBarListener> mListeners;
     private Application mApplication;
     private Boolean mIsRegister = false;
 
-    static NavigationBarObserver getInstance() {
-        return NavigationBarObserverInstance.INSTANCE;
-    }
-
     private NavigationBarObserver() {
         super(new Handler(Looper.getMainLooper()));
+    }
+
+    static NavigationBarObserver getInstance() {
+        return NavigationBarObserverInstance.INSTANCE;
     }
 
     void register(Application application) {

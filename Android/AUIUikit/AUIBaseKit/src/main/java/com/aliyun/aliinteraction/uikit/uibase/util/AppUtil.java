@@ -13,14 +13,6 @@ import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
-import androidx.annotation.ColorInt;
-import androidx.annotation.ColorRes;
-import androidx.annotation.DimenRes;
-import androidx.annotation.DrawableRes;
-import androidx.annotation.Nullable;
-import androidx.annotation.StringRes;
-import androidx.core.content.res.ResourcesCompat;
-
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.Display;
@@ -29,8 +21,16 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 
-import com.aliyun.aliinteraction.common.base.AppContext;
-import com.aliyun.aliinteraction.common.base.util.Utils;
+import androidx.annotation.ColorInt;
+import androidx.annotation.ColorRes;
+import androidx.annotation.DimenRes;
+import androidx.annotation.DrawableRes;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
+import androidx.core.content.res.ResourcesCompat;
+
+import com.alivc.auicommon.common.base.AppContext;
+import com.alivc.auicommon.common.base.util.Utils;
 
 import java.io.Serializable;
 import java.net.URL;
@@ -128,9 +128,10 @@ public class AppUtil implements Serializable {
 
     /**
      * 三星note10+ 机器上判断不可靠
+     *
      * @return
      */
-    public static int getConfigurationOrientation(){
+    public static int getConfigurationOrientation() {
         return getResources().getConfiguration().orientation;
     }
 
@@ -142,7 +143,7 @@ public class AppUtil implements Serializable {
         return getConfigurationOrientation() == Configuration.ORIENTATION_PORTRAIT;
     }
 
-    public static boolean isOrientationAnyLandscape(int ori){
+    public static boolean isOrientationAnyLandscape(int ori) {
         return ori == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
                 || ori == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
                 || ori == ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
@@ -286,8 +287,7 @@ public class AppUtil implements Serializable {
         if (context == null) {
             return false;
         }
-        ConnectivityManager connectivityManager
-                = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isAvailable();
     }

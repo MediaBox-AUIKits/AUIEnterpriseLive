@@ -27,13 +27,13 @@ import com.aliyun.aliinteraction.uikit.R;
  */
 
 public class RoundImageView extends AppCompatImageView {
+    public static final int TYPE_CIRCLE = 0;
+    public static final int TYPE_ROUND = 1;
+    public static final int TYPE_OVAL = 2;
     /**
      * 图片的类型，圆形or圆角
      */
     private int type;
-    public static final int TYPE_CIRCLE = 0;
-    public static final int TYPE_ROUND = 1;
-    public static final int TYPE_OVAL = 2;
     /**
      * 描边的颜色、宽度
      */

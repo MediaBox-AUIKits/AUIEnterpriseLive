@@ -1,1 +1,0 @@
-package com.aliyun.aliinteraction.common.base.util;/** * Created by KyleCe on 2022/5/30 */public class NullUtil {    public static final Runnable NULL_RUNNABLE = new Runnable() {        @Override        public void run() {        }    };}

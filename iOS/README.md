@@ -1,7 +1,8 @@
-# AUIEnterpriseLive组件
+# AUIEnterpriseLive
+阿里云 · AUI Kits 互动直播场景（横屏样式）
 
 ## 介绍
-AUI Kits 企业直播场景集成工具是阿里云针对企业提供的跨平台直播服务，为业务方提供培训、会议、活动等场景的能力，借助视频直播稳定、流畅、灵活的产品能力，以低代码的方式助力业务方快速发布直播应用。
+AUI Kits 互动直播场景（横屏样式）集成工具是阿里云针对企业提供的跨平台直播服务，为业务方提供培训、会议、活动等场景的能力，借助视频直播稳定、流畅、灵活的产品能力，以低代码的方式助力业务方快速发布直播应用。
 
 
 ## 源码说明
@@ -49,8 +50,8 @@ AUI Kits 企业直播场景集成工具是阿里云针对企业提供的跨平�
 - 导入AUIEnterpriseLive：仓库代码下载后，拷贝iOS文件夹到你的APP代码目录下，改名为AUIEnterpriseLive，与你的Podfile文件在同一层级，可以删除Example目录
 - 修改你的Podfile，引入：
   - AliVCSDK_PremiumLive：适用于互动直播的音视频终端SDK，也可以使用AliVCSDK_Premium，参考[SDK说明](https://help.aliyun.com/document_detail/440004.html#section-icw-ppu-dll)
-  - AlivcInteraction：互动SDK
   - AUIFoundation：基础UI组件
+  - AUIMessage：互动消息组件
   - AUIEnterpriseLive：企业直播UI组件源码，根据自身的业务，有需要可以对组件代码进行修改
 ```ruby
 
@@ -62,11 +63,11 @@ target '你的App target' do
     # 如果你的APP中还需要频短视频编辑功能，可以使用音视频终端全功能SDK（AliVCSDK_Premium），可以把本文件中的所有AliVCSDK_PremiumLive替换为AliVCSDK_Premium
     pod 'AliVCSDK_PremiumLive', '~> 1.8.0'
     
-    # 互动SDK
-    pod 'AlivcInteraction', '~> 1.1.0'
-
     # 基础UI组件
     pod 'AUIFoundation/All', :path => "../AUIEnterpriseLive/AUIBaseKits/AUIFoundation/"
+
+    # 互动消息组件
+    pod 'AUIMessage/Alivc', :path => "../AUIEnterpriseLive/AUIBaseKits/AUIMessage/"
     
     # 互动直播UI组件，如果终端SDK使用的是AliVCSDK_Premium，需要AliVCSDK_PremiumLive替换为AliVCSDK_Premium
     pod 'AUIEnterpriseLive/AliVCSDK_PremiumLive',  :path => "./AUIEnterpriseLive/"

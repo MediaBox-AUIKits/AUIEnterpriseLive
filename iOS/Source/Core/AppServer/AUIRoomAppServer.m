@@ -212,6 +212,106 @@ static BOOL g_staging = NO;
     }];
 }
 
++ (void)muteAll:(NSString *)liveId completed:(void (^)(NSError * _Nullable))completed {
+    // 向服务端请求全体禁言接口，目前APPServer仅支持融云聊天室
+    NSDictionary *body = @{
+        @"chatroom_id":liveId ?: @"",
+    };
+    NSString *path = @"/api/v1/live/muteChatroom";
+    [self requestWithPath:path bodyDic:body completionHandler:^(NSURLResponse *response, id responseObject, NSError *error) {
+        if (error) {
+            if (completed) {
+                completed(error);
+            }
+            return;
+        }
+        
+        BOOL success = NO;
+        if (responseObject && [responseObject isKindOfClass:NSDictionary.class]) {
+            success = [[responseObject objectForKey:@"code"] integerValue] == 200;
+        }
+        if (completed) {
+            completed(success ? nil : [NSError errorWithDomain:@"live.service" code:-1 userInfo:@{NSLocalizedDescriptionKey:@"操作失败"}]);
+        }
+    }];
+}
+
++ (void)cancelMuteAll:(NSString *)liveId completed:(void (^)(NSError * _Nullable))completed {
+    // 向服务端请求取消全体禁言接口，目前APPServer仅支持融云聊天室
+    NSDictionary *body = @{
+        @"chatroom_id":liveId ?: @"",
+    };
+    NSString *path = @"/api/v1/live/cancelMuteChatroom";
+    [self requestWithPath:path bodyDic:body completionHandler:^(NSURLResponse *response, id responseObject, NSError *error) {
+        if (error) {
+            if (completed) {
+                completed(error);
+            }
+            return;
+        }
+        
+        BOOL success = NO;
+        if (responseObject && [responseObject isKindOfClass:NSDictionary.class]) {
+            success = [[responseObject objectForKey:@"code"] integerValue] == 200;
+        }
+        if (completed) {
+            completed(success ? nil : [NSError errorWithDomain:@"live.service" code:-1 userInfo:@{NSLocalizedDescriptionKey:@"操作失败"}]);
+        }
+    }];
+}
+
++ (void)queryMuteAll:(NSString *)liveId completed:(void (^)(BOOL, NSError * _Nullable))completed {
+    // 向服务端请求是否开启全体禁言接口，目前APPServer仅支持融云聊天室
+    NSDictionary *body = @{
+        @"chatroom_id":liveId ?: @"",
+    };
+    NSString *path = @"/api/v1/live/isMuteChatroom";
+    [self requestWithPath:path bodyDic:body completionHandler:^(NSURLResponse *response, id responseObject, NSError *error) {
+        if (error) {
+            if (completed) {
+                completed(NO, error);
+            }
+            return;
+        }
+        
+        BOOL success = NO;
+        BOOL mute = NO;
+        if (responseObject && [responseObject isKindOfClass:NSDictionary.class]) {
+            success = [[responseObject objectForKey:@"code"] integerValue] == 200;
+            mute = [[responseObject objectForKey:@"mute"] boolValue];
+        }
+        if (completed) {
+            completed(mute, success ? nil : [NSError errorWithDomain:@"live.service" code:-1 userInfo:@{NSLocalizedDescriptionKey:@"操作失败"}]);
+        }
+    }];
+}
+
++ (void)sendLike:(NSString *)liveId count:(NSUInteger)count completed:(void (^)(NSError * _Nullable))completed {
+    // TODO: 向服务端请求发送点赞数据接口，APPServer当前是写死数据，需要自行开发
+    NSDictionary *body = @{
+        @"like_count":@(count),
+        @"chatroom_id":liveId ?: @"",
+        @"user_id":AUIRoomAccount.me.userId ?: @"",
+    };
+    NSString *path = @"/api/v1/live/sendLikeMessage";
+    [self requestWithPath:path bodyDic:body completionHandler:^(NSURLResponse *response, id responseObject, NSError *error) {
+        if (error) {
+            if (completed) {
+                completed(error);
+            }
+            return;
+        }
+        
+        BOOL success = NO;
+        if (responseObject && [responseObject isKindOfClass:NSDictionary.class]) {
+            success = [[responseObject objectForKey:@"code"] integerValue] == 200;
+        }
+        if (completed) {
+            completed(success ? nil : [NSError errorWithDomain:@"live.service" code:-1 userInfo:@{NSLocalizedDescriptionKey:@"操作失败"}]);
+        }
+    }];
+}
+
 + (void)fetchLiveList:(NSUInteger)pageNum pageSize:(NSUInteger)pageSize completed:(void (^)(NSArray<AUIRoomLiveInfoModel *> * _Nullable, NSError * _Nullable))completed {
     NSDictionary *body = @{
         @"page_num":@(pageNum),
@@ -259,6 +359,32 @@ static BOOL g_staging = NO;
         }
         if (completed) {
             completed(model, nil);
+        }
+    }];
+}
+
++ (void)fetchStatistics:(NSString *)liveId completed:(void (^)(AUIRoomLiveMetricsModel * _Nullable, NSError * _Nullable))completed {
+    // TODO: 向服务端请求直播间统计数据接口，APPServer当前是写死数据，需要自行开发
+    NSDictionary *body = @{
+        @"chatroom_id":liveId ?: @"",
+    };
+    NSString *path = @"/api/v1/live/getStatistics";
+    [self requestWithPath:path bodyDic:body completionHandler:^(NSURLResponse *response, id responseObject, NSError *error) {
+        if (error) {
+            if (completed) {
+                completed(nil, error);
+            }
+            return;
+        }
+        
+        BOOL success = NO;
+        AUIRoomLiveMetricsModel *model = nil;
+        if (responseObject && [responseObject isKindOfClass:NSDictionary.class]) {
+            success = [[responseObject objectForKey:@"code"] integerValue] == 200;
+            model = [[AUIRoomLiveMetricsModel alloc] initWithResponseData:[responseObject objectForKey:@"metrics"]];
+        }
+        if (completed) {
+            completed(model, success ? nil : [NSError errorWithDomain:@"live.service" code:-1 userInfo:@{NSLocalizedDescriptionKey:@"操作失败"}]);
         }
     }];
 }

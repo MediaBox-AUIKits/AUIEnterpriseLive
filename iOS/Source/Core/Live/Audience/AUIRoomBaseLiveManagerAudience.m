@@ -158,11 +158,11 @@
     [self.liveService sendLike];
 }
 
-- (void (^)(AUIRoomUser * _Nonnull, NSInteger))onReceivedPV {
+- (void (^)(NSInteger))onReceivedPV {
     return self.liveService.onReceivedPV;
 }
 
-- (void)setOnReceivedPV:(void (^)(AUIRoomUser * _Nonnull, NSInteger))onReceivedPV {
+- (void)setOnReceivedPV:(void (^)(NSInteger))onReceivedPV {
     self.liveService.onReceivedPV = onReceivedPV;
 }
 

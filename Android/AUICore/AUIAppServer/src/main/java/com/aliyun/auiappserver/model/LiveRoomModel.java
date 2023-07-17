@@ -8,7 +8,7 @@ import java.util.HashMap;
  * @author puke
  * @version 2021/12/14
  */
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class LiveRoomModel {
 
     public String title;

@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'AUIEnterpriseLive'
-  s.version          = '1.0.0'
+  s.version          = '2.0.0'
   s.summary          = 'A short description of AUIEnterpriseLive.'
 
 # This description is used to generate tags and improve search results.
@@ -37,10 +37,10 @@ TODO: Add long description of the pod here.
     ss.resource = 'Resources/*.bundle'
     ss.source_files = 'Source/**/*.{h,m,mm}'
     ss.dependency 'AUIFoundation/All'
+    ss.dependency 'AUIMessage/Alivc'
     ss.dependency 'Masonry'
     ss.dependency 'MJRefresh'
     ss.dependency 'SDWebImage'
-    ss.dependency 'AlivcInteraction'
   end
 
   s.subspec 'AliVCSDK_Premium' do |ss|

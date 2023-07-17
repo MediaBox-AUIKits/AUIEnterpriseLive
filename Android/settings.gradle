@@ -1,32 +1,40 @@
-include ':app'
-rootProject.name = "AliInteractionLiveDemo-Android"
+include ':AUIEnterpriseLiveApp'
+rootProject.name = "amaui-native-live-android"
 //
 //include(':AUIInteractionLiveRoom')
 //project(':AUIInteractionLiveRoom').projectDir = new File("AUIInteractionLiveRoom")
 //
-//include(':AUIInteractionCore')
-//project(':AUIInteractionCore').projectDir = new File("AUIInteractionCore")
+//include(':AUICore')
+//project(':AUICore').projectDir = new File("AUICore")
 //
-//include(':AUIInteractionBusiness:AUIPlayer')
-//project(':AUIInteractionBusiness:AUIPlayer').projectDir = new File("AUIInteractionBusiness/AUIPlayer")
+//include(':AUICore:AUIPlayer')
+//project(':AUICore:AUIPlayer').projectDir = new File("AUICore/AUIPlayer")
 //
-//include(':AUIInteractionBusiness:AUIMessage')
-//project(':AUIInteractionBusiness:AUIMessage').projectDir = new File("AUIInteractionBusiness/AUIMessage")
+//include(':AUIBaseKits:AUIMessage')
+//project(':AUIBaseKits:AUIMessage').projectDir = new File("AUICore/AUIMessage")
 
 def debuggerPath = hasProperty('debugger.path') ? getProperty('debugger.path') : null
 if (debuggerPath != null && new File(debuggerPath).exists()) {
     include(':debugger')
     project(':debugger').projectDir = new File(debuggerPath)
 }
-include ':AUICore'
-include ':AUIEnterpriseLive'
+
+include ':AUIBaseKits:AUICommon'
+include ':AUIBaseKits:AUIBeauty'
+include ':AUIBaseKits:AUIMessage'
+include ':AUIBaseKits:AUIMessage:AUIMessageImpl-Internal'
+include ':AUIBaseKits:AUIMessage:AUIMessageImpl-RongCloud'
+
 include ':AUICore:AUIPlayer'
-include ':AUICore:AUIMessage'
+include ':AUICore:AUILiveMessage'
 include ':AUICore:AUIAppServer'
 include ':AUICore:AUIPusher'
-include ':AUICore:AUIBeauty'
+include ':AUIUikit:AUIPusherKit'
 include ':AUIUikit:AUIBarrageKit'
+include ':AUIUikit:AUINoticeKit'
+include ':AUIUikit:AUILinkMicKit'
 include ':AUIUikit:AUIPlayerKit'
 include ':AUIUikit:AUILikeKit'
+include ':AUIUikit:AUIBeautyKit'
 include ':AUIUikit:AUIBaseKit'
 include ':AUIUikit:AUIEnterpriseKit'

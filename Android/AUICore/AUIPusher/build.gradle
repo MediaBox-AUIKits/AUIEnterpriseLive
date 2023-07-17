@@ -28,9 +28,9 @@ android {
 }
 
 dependencies {
-    //implementation project(':AUIInteractionCore')
-    api project(':AUICore:AUIBeauty')
-    api project(':AUICore:AUIMessage')
-    api project(':AUICore:AUIAppServer')
-    api project(':AUICore:AUIPlayer')
+    implementation project(':AUIBaseKits:AUICommon')
+    implementation project(':AUIBaseKits:AUIBeauty')
+    implementation project(':AUICore:AUILiveMessage')
+    implementation project(':AUICore:AUIAppServer')
+    implementation project(':AUICore:AUIPlayer')
 }

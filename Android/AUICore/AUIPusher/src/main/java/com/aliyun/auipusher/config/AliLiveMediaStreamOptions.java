@@ -10,10 +10,6 @@ import com.alivc.live.pusher.AlivcVideoEncodeGopEnum;
 
 public class AliLiveMediaStreamOptions {
 
-    public AliLiveMediaStreamOptions() {
-
-    }
-
     // 纯视频推流
     public boolean isVideoOnly = false;
     // 纯音频推流
@@ -41,6 +37,31 @@ public class AliLiveMediaStreamOptions {
     @Deprecated
     public AliLiveResolution resolution = AliLiveResolution.RESOLUTION_1080P;
 
+    public AliLiveMediaStreamOptions() {
+
+    }
+
+    public static AlivcResolutionEnum getResolutionByCloudConfig(String resolution) {
+        if ("720P".equalsIgnoreCase(resolution)) {
+            return AlivcResolutionEnum.RESOLUTION_720P;
+        } else if ("1080P".equalsIgnoreCase(resolution)) {
+            return AlivcResolutionEnum.RESOLUTION_1080P;
+        }
+        return AlivcResolutionEnum.RESOLUTION_720P;
+    }
+
+    public static AliLivePreviewDisplayMode getPreviewDisplayMode(int showMode) {
+        switch (showMode) {
+            case CanvasScale.Mode.ASPECT_FILL:
+                return AliLivePreviewDisplayMode.PUSHER_PREVIEW_ASPECT_FILL;
+            case CanvasScale.Mode.ASPECT_FIT:
+                return AliLivePreviewDisplayMode.LIVE_PUSHER_PREVIEW_ASPECT_FIT;
+            case CanvasScale.Mode.SCALE_FILL:
+                return AliLivePreviewDisplayMode.LIVE_PUSHER_PREVIEW_SCALE_FILL;
+        }
+        return AliLivePreviewDisplayMode.PUSHER_PREVIEW_ASPECT_FILL;
+    }
+
     public AlivcResolutionEnum getResolution() {
         if (resolution != null) {
             switch (resolution) {
@@ -59,15 +80,6 @@ public class AliLiveMediaStreamOptions {
                 case RESOLUTION_1080P:
                     return AlivcResolutionEnum.RESOLUTION_1080P;
             }
-        }
-        return AlivcResolutionEnum.RESOLUTION_720P;
-    }
-
-    public static AlivcResolutionEnum getResolutionByCloudConfig(String resolution) {
-        if ("720P".equalsIgnoreCase(resolution)) {
-            return AlivcResolutionEnum.RESOLUTION_720P;
-        } else if ("1080P".equalsIgnoreCase(resolution)) {
-            return AlivcResolutionEnum.RESOLUTION_1080P;
         }
         return AlivcResolutionEnum.RESOLUTION_720P;
     }
@@ -142,19 +154,7 @@ public class AliLiveMediaStreamOptions {
         return AlivcPreviewDisplayMode.ALIVC_LIVE_PUSHER_PREVIEW_ASPECT_FILL;
     }
 
-    public static AliLivePreviewDisplayMode getPreviewDisplayMode(int showMode) {
-        switch (showMode) {
-            case CanvasScale.Mode.ASPECT_FILL:
-                return AliLivePreviewDisplayMode.PUSHER_PREVIEW_ASPECT_FILL;
-            case CanvasScale.Mode.ASPECT_FIT:
-                return AliLivePreviewDisplayMode.LIVE_PUSHER_PREVIEW_ASPECT_FIT;
-            case CanvasScale.Mode.SCALE_FILL:
-                return AliLivePreviewDisplayMode.LIVE_PUSHER_PREVIEW_SCALE_FILL;
-        }
-        return AliLivePreviewDisplayMode.PUSHER_PREVIEW_ASPECT_FILL;
-    }
-
-        public enum AliLiveResolution {
+    public enum AliLiveResolution {
         RESOLUTION_180P,
         RESOLUTION_240P,
         RESOLUTION_360P,
@@ -163,12 +163,13 @@ public class AliLiveMediaStreamOptions {
         RESOLUTION_720P,
         RESOLUTION_1080P,
     }
-    public enum  AliLivePushCameraType {
+
+    public enum AliLivePushCameraType {
         CAMERA_TYPE_BACK,
         CAMERA_TYPE_FRONT
     }
 
-    public enum  AliLiveVideoEncode {
+    public enum AliLiveVideoEncode {
         ENCODE_MODE_HARD,
         ENCODE_MODE_SOFT
     }

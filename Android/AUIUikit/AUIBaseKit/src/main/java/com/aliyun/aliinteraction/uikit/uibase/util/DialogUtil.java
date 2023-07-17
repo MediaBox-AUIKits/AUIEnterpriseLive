@@ -8,8 +8,6 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.InsetDrawable;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Pair;
 import android.view.Gravity;
@@ -22,7 +20,10 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
-import com.aliyun.aliinteraction.common.base.util.Utils;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.alivc.auicommon.common.base.util.Utils;
 import com.aliyun.aliinteraction.uikit.R;
 
 /**
@@ -31,26 +32,6 @@ import com.aliyun.aliinteraction.uikit.R;
  */
 public class DialogUtil {
     private static int selectedIndex = -1;
-
-    public interface InputCallback {
-        void onInput(String value);
-    }
-
-    public static class Action {
-        public String text;
-        public Runnable runnable;
-        public boolean checked;
-
-        public Action(String text, Runnable runnable) {
-            this(text, runnable, false);
-        }
-
-        public Action(String text, Runnable runnable, boolean checked) {
-            this.text = text;
-            this.runnable = runnable;
-            this.checked = checked;
-        }
-    }
 
     public static Dialog doAction(Context context, String title, final Action... actions) {
         return showCustomDialog(context, title, null, null, true, null, null, actions);
@@ -347,5 +328,25 @@ public class DialogUtil {
 
     public static boolean isShowing(@Nullable Dialog dialog) {
         return dialog != null && dialog.isShowing();
+    }
+
+    public interface InputCallback {
+        void onInput(String value);
+    }
+
+    public static class Action {
+        public String text;
+        public Runnable runnable;
+        public boolean checked;
+
+        public Action(String text, Runnable runnable) {
+            this(text, runnable, false);
+        }
+
+        public Action(String text, Runnable runnable, boolean checked) {
+            this.text = text;
+            this.runnable = runnable;
+            this.checked = checked;
+        }
     }
 }

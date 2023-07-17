@@ -7,12 +7,11 @@ import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 
-import com.aliyun.aliinteraction.InteractionEngine;
-import com.aliyun.aliinteraction.base.AppContext;
-import com.aliyun.aliinteraction.base.Callback;
-import com.aliyun.aliinteraction.base.Error;
-import com.aliyun.aliinteraction.error.Errors;
-import com.aliyun.aliinteraction.util.Util;
+import com.alivc.auicommon.common.base.AppContext;
+import com.alivc.auimessage.MessageServiceFactory;
+import com.alivc.auimessage.listener.InteractionCallback;
+import com.alivc.auimessage.listener.InteractionUICallback;
+import com.alivc.auimessage.model.base.InteractionError;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -26,6 +25,19 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 
 class ApiInvokerCallAdapterFactory extends CallAdapter.Factory {
+
+    public static boolean isNetworkInvalid(Context context) {
+        return !isNetworkAvailable(context);
+    }
+
+    public static boolean isNetworkAvailable(Context context) {
+        if (context == null) {
+            return false;
+        }
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isAvailable();
+    }
 
     @Override
     public CallAdapter<?, ?> get(@NonNull Type returnType, @NonNull Annotation[] annotations,
@@ -57,7 +69,8 @@ class ApiInvokerCallAdapterFactory extends CallAdapter.Factory {
         public ApiInvoker<R> adapt(@NonNull final Call<R> call) {
             return new ApiInvoker<R>() {
                 @Override
-                public void invoke(final Callback<R> callback) {
+                public void invoke(final InteractionCallback<R> callback) {
+                    InteractionUICallback<R> uiCallback = new InteractionUICallback<>(callback);
                     call.enqueue(new retrofit2.Callback<R>() {
                         @Override
                         public void onResponse(@NonNull Call<R> call, @NonNull Response<R> response) {
@@ -65,26 +78,26 @@ class ApiInvokerCallAdapterFactory extends CallAdapter.Factory {
                             switch (httpCode) {
                                 case 200:
                                     R body = response.body();
-                                    Util.callSuccess(callback, body);
+                                    uiCallback.onSuccess(body);
                                     break;
                                 case 401:
-                                    if (InteractionEngine.instance().isLogin()) {
+                                    if (MessageServiceFactory.getMessageService().isLogin()) {
                                         // AppServer的token过期
-                                        AppServerTokenManager.refreshToken(new Callback<Void>() {
+                                        AppServerTokenManager.refreshToken(new InteractionCallback<Void>() {
                                             @Override
                                             public void onSuccess(Void unused) {
                                                 // 刷新token后再次请求
-                                                invoke(callback);
+                                                invoke(uiCallback);
                                             }
 
                                             @Override
-                                            public void onError(Error error) {
-                                                Util.callError(callback, error);
+                                            public void onError(InteractionError error) {
+                                                uiCallback.onError(error);
                                             }
                                         });
                                     } else {
                                         // 登录失败
-                                        Util.callError(callback, Errors.BIZ_ERROR, "用户名或密码错误");
+                                        uiCallback.onError(new InteractionError("用户名或密码错误"));
                                     }
                                     break;
                                 default:
@@ -99,7 +112,7 @@ class ApiInvokerCallAdapterFactory extends CallAdapter.Factory {
                                         } catch (IOException ignored) {
                                         }
                                     }
-                                    Util.callError(callback, Errors.BIZ_ERROR, msg);
+                                    uiCallback.onError(new InteractionError(msg));
                                     break;
                             }
                         }
@@ -107,28 +120,14 @@ class ApiInvokerCallAdapterFactory extends CallAdapter.Factory {
                         @Override
                         public void onFailure(@NonNull Call<R> call, @NonNull Throwable t) {
                             if (isNetworkInvalid(AppContext.getContext())) {
-                                Util.callError(callback, Errors.BIZ_ERROR, "当前网络不可用，请检查后再试");
+                                uiCallback.onError(new InteractionError("当前网络不可用，请检查后再试"));
                             } else {
-                                Util.callError(callback, Errors.BIZ_ERROR, t.getMessage());
+                                uiCallback.onError(new InteractionError(t.getMessage()));
                             }
                         }
                     });
                 }
             };
         }
-    }
-
-    public static boolean isNetworkInvalid(Context context) {
-        return !isNetworkAvailable(context);
-    }
-
-    public static boolean isNetworkAvailable(Context context) {
-        if (context == null) {
-            return false;
-        }
-        ConnectivityManager connectivityManager
-                = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-        return activeNetworkInfo != null && activeNetworkInfo.isAvailable();
     }
 }

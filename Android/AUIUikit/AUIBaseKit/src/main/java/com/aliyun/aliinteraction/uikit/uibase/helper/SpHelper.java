@@ -4,7 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.TextUtils;
 
-import com.aliyun.aliinteraction.common.base.AppContext;
+import com.alivc.auicommon.common.base.AppContext;
 
 import java.io.Serializable;
 import java.lang.annotation.ElementType;
@@ -28,32 +28,6 @@ import java.util.Map;
 public class SpHelper implements Serializable {
 
     private static final Map<Class<?>, Object> spInstances = new HashMap<>();
-
-    @Target(ElementType.TYPE)
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface Sp {
-        String value() default "";
-    }
-
-    @Target(ElementType.METHOD)
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface Setter {
-        String value() default "";
-    }
-
-    @Target(ElementType.METHOD)
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface Getter {
-        String value() default "";
-
-        String defValue() default "";
-    }
-
-    @Target(ElementType.METHOD)
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface Remove {
-        String value() default "";
-    }
 
     public static <T> T getInstance(Class<T> spType) {
         Object instance = spInstances.get(spType);
@@ -142,5 +116,31 @@ public class SpHelper implements Serializable {
 
     public static String get(String spName, String key, String defValue) {
         return getSp(spName).getString(key, defValue);
+    }
+
+    @Target(ElementType.TYPE)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface Sp {
+        String value() default "";
+    }
+
+    @Target(ElementType.METHOD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface Setter {
+        String value() default "";
+    }
+
+    @Target(ElementType.METHOD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface Getter {
+        String value() default "";
+
+        String defValue() default "";
+    }
+
+    @Target(ElementType.METHOD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface Remove {
+        String value() default "";
     }
 }

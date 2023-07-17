@@ -9,20 +9,17 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.alibaba.dingpaas.interaction.ImBroadCastStatistics;
-import com.alibaba.dingpaas.interaction.ImGetGroupStatisticsRsp;
-import com.aliyun.aliinteraction.core.base.Actions;
+import com.alivc.auicommon.core.base.Actions;
+import com.aliyun.aliinteraction.roompaas.message.listener.SimpleOnMessageListener;
+import com.aliyun.aliinteraction.roompaas.message.model.LiveRoomInfoUpdateModel;
 import com.aliyun.aliinteraction.uikit.R;
 import com.aliyun.aliinteraction.uikit.core.BaseComponent;
 import com.aliyun.aliinteraction.uikit.core.ComponentHolder;
 import com.aliyun.aliinteraction.uikit.core.IComponent;
-import com.aliyun.auiappserver.model.LiveModel;
-import com.aliyun.aliinteraction.model.JoinGroupModel;
-import com.aliyun.aliinteraction.model.LikeModel;
-import com.aliyun.aliinteraction.model.Message;
-import com.aliyun.aliinteraction.roompaas.message.listener.SimpleOnMessageListener;
 import com.aliyun.aliinteraction.uikit.uibase.util.AppUtil;
+import com.aliyun.auiappserver.model.LiveModel;
 import com.aliyun.auipusher.LiveContext;
+import com.alivc.auimessage.model.base.AUIMessageModel;
 
 import java.util.Locale;
 
@@ -39,19 +36,16 @@ public class LiveCountInfoComponent extends FrameLayout implements ComponentHold
         anchorCount = findViewById(R.id.anchor_count);
     }
 
-
     /**
      * 设置观看人数
      *
      * @param count 观看人数
      */
-    public void setViewCount(int count) {
+    public void setViewCount(long count) {
         anchorCount.setText(formatNumber(count));
     }
 
-
-
-    private String formatNumber(int number) {
+    private String formatNumber(long number) {
         if ((number < 0)) {
             // 兜底保护
             return String.valueOf(0);
@@ -77,16 +71,12 @@ public class LiveCountInfoComponent extends FrameLayout implements ComponentHold
             // 监听互动信息变化
             getMessageService().addMessageListener(new SimpleOnMessageListener() {
                 @Override
-                public void onJoinGroup(Message<JoinGroupModel> message) {
-                    ImBroadCastStatistics statistics = message.data.statistics;
-                    if (statistics != null) {
-                        setViewCount(statistics.pv);
+                public void onPVReceived(AUIMessageModel<LiveRoomInfoUpdateModel> message) {
+                    super.onPVReceived(message);
+                    if (message != null && message.data != null) {
+                        LiveRoomInfoUpdateModel liveRoomInfoUpdateModel = message.data;
+                        setViewCount(liveRoomInfoUpdateModel.pv);
                     }
-                }
-
-                @Override
-                public void onLikeReceived(Message<LikeModel> message) {
-                   // setLikeCount(message.data.likeCount);
                 }
             });
         }
@@ -99,20 +89,16 @@ public class LiveCountInfoComponent extends FrameLayout implements ComponentHold
 
         @Override
         public void onEvent(String action, Object... args) {
+            super.onEvent(action, args);
             switch (action) {
-                case Actions.GET_GROUP_STATISTICS_SUCCESS:
-                    if (args.length > 0 && args[0] instanceof ImGetGroupStatisticsRsp) {
-                        ImGetGroupStatisticsRsp rsp = (ImGetGroupStatisticsRsp) args[0];
-                        setViewCount(rsp.pv);
-                    }
-                    break;
-                case Actions.IMMERSIVE_PLAYER:
-                    if(args[0].equals(true)){
+                case Actions.IMMERSIVE_PLAYER: {
+                    if (args[0].equals(true)) {
                         setVisibility(View.GONE);
-                    }else{
+                    } else {
                         setVisibility(View.VISIBLE);
                     }
                     break;
+                }
                 default:
                     break;
             }

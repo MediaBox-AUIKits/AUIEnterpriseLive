@@ -42,7 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)sendLike;
 
 // PV
-@property (copy, nonatomic) void (^onReceivedPV)(AUIRoomUser *sender, NSInteger pv);
+@property (copy, nonatomic) void (^onReceivedPV)(NSInteger pv);
 @property (assign, nonatomic, readonly) NSInteger pv;
 
 // 公告

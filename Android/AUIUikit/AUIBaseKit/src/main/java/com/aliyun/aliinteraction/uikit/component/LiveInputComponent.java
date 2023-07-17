@@ -23,21 +23,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 
-import com.alibaba.dingpaas.interaction.ImGetGroupUserByIdListReq;
-import com.alibaba.dingpaas.interaction.ImGetGroupUserByIdListRsp;
-import com.alibaba.dingpaas.interaction.ImGroupUserDetail;
-import com.aliyun.aliinteraction.base.Callback;
-import com.aliyun.aliinteraction.base.Error;
-import com.aliyun.aliinteraction.common.base.log.Logger;
-import com.aliyun.aliinteraction.common.base.util.CollectionUtil;
-import com.aliyun.aliinteraction.common.roombase.Const;
-import com.aliyun.aliinteraction.core.base.Actions;
-import com.aliyun.aliinteraction.core.base.MessageModel;
-import com.aliyun.aliinteraction.model.CancelMuteGroupModel;
-import com.aliyun.aliinteraction.model.CancelMuteUserModel;
-import com.aliyun.aliinteraction.model.Message;
-import com.aliyun.aliinteraction.model.MuteGroupModel;
-import com.aliyun.aliinteraction.model.MuteUserModel;
+import com.alivc.auicommon.common.base.log.Logger;
+import com.alivc.auicommon.common.roombase.Const;
+import com.alivc.auicommon.core.base.Actions;
+import com.alivc.auicommon.core.base.MessageModel;
 import com.aliyun.aliinteraction.roompaas.message.listener.SimpleOnMessageListener;
 import com.aliyun.aliinteraction.uikit.R;
 import com.aliyun.aliinteraction.uikit.core.BaseComponent;
@@ -51,8 +40,12 @@ import com.aliyun.aliinteraction.uikit.uibase.util.immersionbar.ImmersionBar;
 import com.aliyun.aliinteraction.uikit.uibase.view.IImmersiveSupport;
 import com.aliyun.auiappserver.model.LiveModel;
 import com.aliyun.auipusher.LiveContext;
-
-import java.util.ArrayList;
+import com.alivc.auimessage.listener.InteractionCallback;
+import com.alivc.auimessage.model.base.AUIMessageModel;
+import com.alivc.auimessage.model.base.InteractionError;
+import com.alivc.auimessage.model.lwp.GroupMuteStatusResponse;
+import com.alivc.auimessage.model.message.MuteGroupMessage;
+import com.alivc.auimessage.model.message.UnMuteGroupMessage;
 
 /**
  * @author puke
@@ -62,13 +55,11 @@ public class LiveInputComponent extends FrameLayout implements ComponentHolder {
 
     private static final String TAG = "LiveInputComponent";
     private static final int SEND_COMMENT_MAX_LENGTH = 50;
-
+    private static final int MINI_KEYBOARD_ALTER = 200;
     private final Component component = new Component();
     private final TextView commentInput;
-
     private Dialog dialog;
     private int largestInputLocationY;
-    private static final int MINI_KEYBOARD_ALTER = 200;
     private CharSequence latestUnsentInputContent;
 
     // 自己是否被禁言
@@ -95,6 +86,26 @@ public class LiveInputComponent extends FrameLayout implements ComponentHolder {
                 LiveInputComponent.this.onInputClick();
             }
         });
+    }
+
+    private static Dialog createDialog(Context context) {
+        // 自定义dialog显示布局
+        @SuppressLint("InflateParams")
+        View view = LayoutInflater.from(context).inflate(R.layout.iub_dialog_input, null);
+        // 自定义dialog显示风格
+        Dialog dialog = new Dialog(context, R.style.Dialog4Input);
+        // 弹窗点击周围空白处弹出层自动消失弹窗消失(false时为点击周围空白处弹出层不自动消失)
+        dialog.setCanceledOnTouchOutside(true);
+        // 将布局设置给Dialog
+        dialog.setContentView(view);
+        // 获取当前Activity所在的窗体
+        Window window = dialog.getWindow();
+        WindowManager.LayoutParams wlp = window.getAttributes();
+        wlp.gravity = Gravity.BOTTOM;
+        wlp.width = LayoutParams.MATCH_PARENT;
+        wlp.height = LayoutParams.MATCH_PARENT;
+        window.setAttributes(wlp);
+        return dialog;
     }
 
     protected void onInputClick() {
@@ -227,27 +238,6 @@ public class LiveInputComponent extends FrameLayout implements ComponentHolder {
         }
     }
 
-    private static Dialog createDialog(Context context) {
-        // 自定义dialog显示布局
-        @SuppressLint("InflateParams")
-        View view = LayoutInflater.from(context).inflate(R.layout.iub_dialog_input, null);
-        // 自定义dialog显示风格
-        Dialog dialog = new Dialog(context, R.style.Dialog4Input);
-        // 弹窗点击周围空白处弹出层自动消失弹窗消失(false时为点击周围空白处弹出层不自动消失)
-        dialog.setCanceledOnTouchOutside(true);
-        // 将布局设置给Dialog
-        dialog.setContentView(view);
-        // 获取当前Activity所在的窗体
-        Window window = dialog.getWindow();
-        WindowManager.LayoutParams wlp = window.getAttributes();
-        wlp.gravity = Gravity.BOTTOM;
-        wlp.width = LayoutParams.MATCH_PARENT;
-        wlp.height = LayoutParams.MATCH_PARENT;
-        window.setAttributes(wlp);
-        return dialog;
-    }
-
-
     private void updateMuteState() {
         if (isMuteAll) {
             // 全员被禁言
@@ -265,7 +255,7 @@ public class LiveInputComponent extends FrameLayout implements ComponentHolder {
         commentInput.setEnabled(enable);
         commentInput.setText(hintRes);
         commentInput.setEnabled(enable);
-        commentInput.setTextColor(enable ?  Color.parseColor("#747A8C") : Color.parseColor("#66747A8C"));
+        commentInput.setTextColor(enable ? Color.parseColor("#747A8C") : Color.parseColor("#66747A8C"));
     }
 
     @Override
@@ -281,37 +271,17 @@ public class LiveInputComponent extends FrameLayout implements ComponentHolder {
 
             getMessageService().addMessageListener(new SimpleOnMessageListener() {
                 @Override
-                public void onMuteGroup(Message<MuteGroupModel> message) {
+                public void onMuteGroup(AUIMessageModel<MuteGroupMessage> message) {
+                    super.onMuteGroup(message);
                     isMuteAll = true;
                     updateMuteState();
                 }
 
                 @Override
-                public void onCancelMuteGroup(Message<CancelMuteGroupModel> message) {
+                public void onUnMuteGroup(AUIMessageModel<UnMuteGroupMessage> message) {
+                    super.onUnMuteGroup(message);
                     isMuteAll = false;
                     updateMuteState();
-                }
-
-                @Override
-                public void onMuteUser(Message<MuteUserModel> message) {
-                    boolean isSelf = TextUtils.equals(message.data.userId, getUserId());
-                    if (isSelf) {
-                        // 是自己, 才处理
-                        isMute = true;
-                        updateMuteState();
-                        updateMuteState();
-                    }
-                }
-
-                @Override
-                public void onCancelMuteUser(Message<CancelMuteUserModel> message) {
-                    boolean isSelf = TextUtils.equals(message.data.userId, getUserId());
-                    if (isSelf) {
-                        // 是自己, 才处理
-                        isMute = false;
-                        updateMuteState();
-                        updateMuteState();
-                    }
                 }
             });
         }
@@ -319,48 +289,30 @@ public class LiveInputComponent extends FrameLayout implements ComponentHolder {
         @Override
         public void onEnterRoomSuccess(LiveModel liveModel) {
             queryUserMuteState();
-           // setVisibility(needPlayback() ? INVISIBLE : VISIBLE);
-            if(needPlayback()){
-                setVisibility(INVISIBLE);
-            }
+            setVisibility(needPlayback() ? INVISIBLE : VISIBLE);
         }
 
         private void queryUserMuteState() {
-            ImGetGroupUserByIdListReq req = new ImGetGroupUserByIdListReq();
-            req.groupId = getGroupId();
-            req.userIdList = new ArrayList<String>() {{
-                add(getUserId());
-            }};
-            interactionService.getGroupUserByIdList(req, new Callback<ImGetGroupUserByIdListRsp>() {
+            // 当前不做点对点禁言
+            getMessageService().queryMuteAll(new InteractionCallback<Boolean>() {
                 @Override
-                public void onSuccess(ImGetGroupUserByIdListRsp rsp) {
-                    ArrayList<ImGroupUserDetail> userList = rsp.getUserList();
-                    if (userList != null) {
-                        for (ImGroupUserDetail detail : userList) {
-                            if (TextUtils.equals(detail.userId, getUserId())) {
-                                ArrayList<String> muteBy = detail.getMuteBy();
-                                if (CollectionUtil.isEmpty(muteBy)) {
-                                    isMute = false;
-                                    isMuteAll = false;
-                                } else {
-                                    isMute = muteBy.contains("user");
-                                    isMuteAll = muteBy.contains("group");
-                                }
-                                updateMuteState();
-                                break;
-                            }
-                        }
-                    }
+                public void onSuccess(Boolean data) {
+                    isMuteAll = data;
+                    updateMuteState();
                 }
 
                 @Override
-                public void onError(Error error) {
-
+                public void onError(InteractionError interactionError) {
+                    showToast("获取禁言状态失败，" + interactionError);
                 }
             });
         }
 
         private void onCommentSubmit(final EditText dialogInput) {
+            if (isMuteAll) {
+                component.showToast("当前全局禁言中");
+                return;
+            }
             final String inputText = dialogInput.getText().toString().trim();
             if (TextUtils.isEmpty(inputText)) {
                 component.showToast("请输入评论内容");
@@ -368,7 +320,7 @@ public class LiveInputComponent extends FrameLayout implements ComponentHolder {
             }
 
             latestUnsentInputContent = "";
-            getMessageService().sendComment(inputText, new Callback<String>() {
+            getMessageService().sendComment(inputText, new InteractionCallback<String>() {
                 @Override
                 public void onSuccess(String messageId) {
                     // 通知面板, 自己发送的弹幕信息
@@ -380,7 +332,7 @@ public class LiveInputComponent extends FrameLayout implements ComponentHolder {
                 }
 
                 @Override
-                public void onError(Error error) {
+                public void onError(InteractionError error) {
                     showToast(error.msg);
                 }
             });
@@ -390,14 +342,22 @@ public class LiveInputComponent extends FrameLayout implements ComponentHolder {
         @Override
         public void onEvent(String action, Object... args) {
             switch (action) {
-                case Actions.SHOW_ENTERPRISE_CHAT:
+                case Actions.GET_GROUP_STATISTICS_SUCCESS: {
+                    if (args.length > 0 && args[0] instanceof GroupMuteStatusResponse) {
+                        GroupMuteStatusResponse rsp = (GroupMuteStatusResponse) args[0];
+                        isMuteAll = rsp.mute;
+                        updateMuteState();
+                    }
+                    break;
+                }
+                case Actions.SHOW_ENTERPRISE_CHAT: {
                     setVisibility(VISIBLE);
                     break;
-                case Actions.SHOW_ENTERPRISE_INTRO:
+                }
+                case Actions.SHOW_ENTERPRISE_INTRO: {
                     setVisibility(INVISIBLE);
                     break;
-                default:
-                    break;
+                }
             }
         }
     }

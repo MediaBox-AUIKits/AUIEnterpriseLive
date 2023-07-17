@@ -6,18 +6,18 @@ import android.view.View;
 
 import androidx.annotation.Nullable;
 
-import com.aliyun.aliinteraction.uikit.R;
 import com.aliyun.aliinteraction.player.SimpleLivePlayerEventHandler;
-import com.aliyun.aliinteraction.uikit.core.BaseComponent;
-import com.aliyun.aliinteraction.uikit.core.ComponentHolder;
-import com.aliyun.aliinteraction.uikit.core.IComponent;
-import com.aliyun.auiappserver.model.LiveModel;
-import com.aliyun.aliinteraction.model.Message;
 import com.aliyun.aliinteraction.roompaas.message.listener.SimpleOnMessageListener;
 import com.aliyun.aliinteraction.roompaas.message.model.StartLiveModel;
 import com.aliyun.aliinteraction.roompaas.message.model.StopLiveModel;
+import com.aliyun.aliinteraction.uikit.R;
+import com.aliyun.aliinteraction.uikit.core.BaseComponent;
+import com.aliyun.aliinteraction.uikit.core.ComponentHolder;
+import com.aliyun.aliinteraction.uikit.core.IComponent;
 import com.aliyun.aliinteraction.uikit.uibase.util.AnimUtil;
+import com.aliyun.auiappserver.model.LiveModel;
 import com.aliyun.auipusher.LiveContext;
+import com.alivc.auimessage.model.base.AUIMessageModel;
 
 /**
  * @author puke
@@ -59,12 +59,12 @@ public class LiveCurtainComponent extends View implements ComponentHolder {
             super.onInit(liveContext);
             getMessageService().addMessageListener(new SimpleOnMessageListener() {
                 @Override
-                public void onStartLive(Message<StartLiveModel> message) {
+                public void onStartLive(AUIMessageModel<StartLiveModel> message) {
                     hideCurtain();
                 }
 
                 @Override
-                public void onStopLive(Message<StopLiveModel> message) {
+                public void onStopLive(AUIMessageModel<StopLiveModel> message) {
                     if (!isOwner()) {
                         showCurtain();
                     }

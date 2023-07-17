@@ -11,7 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.aliyun.aliinteraction.common.base.util.CommonUtil;
+import com.alivc.auicommon.common.base.util.CommonUtil;
 
 /**
  * Created by KyleCe on 2021/7/9
@@ -20,7 +20,7 @@ public abstract class BaseFragment extends Fragment {
 
     @Nullable
     protected Context context;
-    protected  View inflatedView;
+    protected View inflatedView;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {

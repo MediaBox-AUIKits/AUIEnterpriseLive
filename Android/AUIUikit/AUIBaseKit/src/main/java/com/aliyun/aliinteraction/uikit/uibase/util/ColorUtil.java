@@ -1,8 +1,9 @@
 package com.aliyun.aliinteraction.uikit.uibase.util;
 
 import android.graphics.Color;
-import androidx.annotation.Nullable;
 import android.text.TextUtils;
+
+import androidx.annotation.Nullable;
 
 import java.util.Random;
 

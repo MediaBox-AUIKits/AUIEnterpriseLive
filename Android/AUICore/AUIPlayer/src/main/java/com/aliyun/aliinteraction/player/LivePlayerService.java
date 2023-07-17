@@ -2,7 +2,7 @@ package com.aliyun.aliinteraction.player;
 
 import android.view.SurfaceView;
 
-import com.aliyun.aliinteraction.common.base.exposable.IEventHandlerManager;
+import com.alivc.auicommon.common.base.exposable.IEventHandlerManager;
 import com.aliyun.aliinteraction.player.exposable.CanvasScale;
 
 /**
@@ -46,6 +46,7 @@ public interface LivePlayerService extends IEventHandlerManager<LivePlayerEventH
 
     /**
      * 播放特定url的视频
+     *
      * @return 播放视图
      */
     SurfaceView playUrl(String url);
@@ -59,18 +60,21 @@ public interface LivePlayerService extends IEventHandlerManager<LivePlayerEventH
 
     /**
      * recommend to invoke this API when player is paused
+     *
      * @param internal ms
      */
     void updatePositionTimerInternalMs(long internal);
 
     /**
      * 设置utcTime回调，获取到utcTime
+     *
      * @param utcTimeListener
      */
     void setUtcTimeListener(LivePlayerManager.UtcTimeListener utcTimeListener);
 
     /**
      * 跳转到某个时间
+     *
      * @param position
      */
     void seekTo(long position);
@@ -82,6 +86,7 @@ public interface LivePlayerService extends IEventHandlerManager<LivePlayerEventH
 
     /**
      * 设置AliLivePlayerConfig 参数
+     *
      * @param playerConfig
      */
     void setPlayerConfig(AliLivePlayerConfig playerConfig);

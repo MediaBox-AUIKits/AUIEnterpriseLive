@@ -37,6 +37,15 @@ static BOOL g_canRtsPush = YES;
     g_canRtsPush = canRtsPush;
 }
 
+static AlivcLivePushFPS g_pushFPS = AlivcLivePushFPS20;
++ (AlivcLivePushFPS)pushFPS {
+    return g_pushFPS;
+}
+
++ (void)setPushFPS:(AlivcLivePushFPS)pushFPS {
+    g_pushFPS = pushFPS;
+}
+
 - (void)dealloc {
     NSLog(@"dealloc:AUILiveRoomPusher");
 }
@@ -72,7 +81,7 @@ static BOOL g_canRtsPush = YES;
     pushConfig.resolution = AlivcLivePushResolution720P;
     pushConfig.previewDisplayMode = displayMode;
     pushConfig.livePushMode = pushMode;
-    pushConfig.fps = AlivcLivePushFPS20;
+    pushConfig.fps = [self.class pushFPS];
     pushConfig.enableAutoBitrate = true;
     pushConfig.videoEncodeGop = AlivcLivePushVideoEncodeGOP_2;
     pushConfig.connectRetryInterval = 2000;
@@ -116,15 +125,17 @@ static BOOL g_canRtsPush = YES;
         if (self.class.canRtsPush && self.liveInfoModel.push_url_info.rts_url.length > 0) {
             pushUrl = self.liveInfoModel.push_url_info.rts_url;
         }
-        
         if (pushUrl.length > 0) {
+            NSLog(@"LiveEvent:%@", pushUrl);
             [_pushEngine startPushWithURL:pushUrl];
             return YES;
         }
     }
     else {
-        if (self.liveInfoModel.link_info.rtc_push_url.length > 0) {
-            [_pushEngine startPushWithURL:self.liveInfoModel.link_info.rtc_push_url];
+        NSString *pushUrl = self.liveInfoModel.link_info.rtc_push_url;
+        if (pushUrl.length > 0) {
+            NSLog(@"LiveEvent:%@", pushUrl);
+            [_pushEngine startPushWithURL:pushUrl];
             return YES;
         }
     }    
@@ -229,6 +240,12 @@ static BOOL g_canRtsPush = YES;
 - (void)onFirstFramePreviewed:(AlivcLivePusher *)pusher {
     dispatch_async(dispatch_get_main_queue(), ^{
         NSLog(@"LiveEvent:onFirstFramePreviewed");
+    });
+}
+
+- (void)onFirstFramePushed:(AlivcLivePusher *)pusher {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSLog(@"LiveEvent:onFirstFramePushed");
     });
 }
 
@@ -397,6 +414,20 @@ static BOOL g_canRtsPush = YES;
         NSLog(@"LiveEvent:onSendSeiMessage");
     });
 }
+
+- (void)onPushURLTokenExpired:(AlivcLivePusher *)pusher {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSLog(@"LiveEvent:onPushURLTokenExpired");
+    });
+}
+
+
+- (void)onPushURLTokenWillExpire:(AlivcLivePusher *)pusher {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSLog(@"LiveEvent:onPushURLTokenWillExpire");
+    });
+}
+
 
 #pragma mark - AlivcLivePusherCustomFilterDelegate
 

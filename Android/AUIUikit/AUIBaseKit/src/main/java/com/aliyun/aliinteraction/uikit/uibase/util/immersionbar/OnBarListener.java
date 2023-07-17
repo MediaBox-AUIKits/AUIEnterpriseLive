@@ -2,7 +2,6 @@ package com.aliyun.aliinteraction.uikit.uibase.util.immersionbar;
 
 /**
  * The interface On bar listener.
- *
  */
 public interface OnBarListener {
 

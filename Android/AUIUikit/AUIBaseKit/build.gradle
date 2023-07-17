@@ -21,13 +21,17 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
 
 dependencies {
 //    compileOnly "com.alibaba:fastjson:1.1.72.android"
 //    implementation 'androidx.leanback:leanback:1.0.0'
-    //api project(':AUIInteractionCore')
-    api project(':AUICore:AUIMessage')
+    api project(':AUIBaseKits:AUICommon')
+    api project(':AUICore:AUILiveMessage')
     api project(':AUICore:AUIAppServer')
     api project(':AUICore:AUIPlayer')
     api project(':AUICore:AUIPusher')

@@ -6,10 +6,6 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.os.Build;
-import androidx.annotation.ColorInt;
-import androidx.annotation.FloatRange;
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
-import androidx.drawerlayout.widget.DrawerLayout;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
@@ -19,8 +15,13 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
 
-import com.aliyun.aliinteraction.common.base.log.Logger;
-import com.aliyun.aliinteraction.common.base.util.Utils;
+import androidx.annotation.ColorInt;
+import androidx.annotation.FloatRange;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.drawerlayout.widget.DrawerLayout;
+
+import com.alivc.auicommon.common.base.log.Logger;
+import com.alivc.auicommon.common.base.util.Utils;
 import com.aliyun.aliinteraction.uikit.R;
 import com.aliyun.aliinteraction.uikit.uibase.util.immersionbar.NavigationBarUtils;
 
@@ -29,10 +30,15 @@ import java.lang.reflect.Method;
 
 public class ExStatusBarUtils {
     public static final String TAG = "ExStatusBarUtils";
+    public static final int MIN_API = 19;
+    public static final int IS_SET_PADDING_KEY = 54648632;
+    private static final int sViewTagForSystemUiVisibility = 2022061000;
+    private static final int sViewTagForStatusBarColor = 2022061001;
+    private static final int sViewTagForNavigationBarColor = 2022061002;
+    private static final int STATUS_VIEW_ID = R.id.status_view;
+    private static final int TRANSLUCENT_VIEW_ID = R.id.translucent_view;
     public static int DEFAULT_COLOR = 0;
     public static float DEFAULT_ALPHA = 0;//Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? 0.2f : 0.3f;
-    public static final int MIN_API = 19;
-
     public static int s_SystemUiVisibilityOrigin;
 
     //<editor-fold desc="沉侵">
@@ -72,10 +78,6 @@ public class ExStatusBarUtils {
         }
     }
 
-    private static final int sViewTagForSystemUiVisibility = 2022061000;
-    private static final int sViewTagForStatusBarColor = 2022061001;
-    private static final int sViewTagForNavigationBarColor = 2022061002;
-
     public static void intoFullScreenWithSystemUi(Window window) {
         View view = window.getDecorView();
         int flags = view.getSystemUiVisibility();
@@ -102,8 +104,8 @@ public class ExStatusBarUtils {
         View view = window.getDecorView();
 
         Object systemUiTag = view.getTag(sViewTagForSystemUiVisibility);
-        if (systemUiTag instanceof Integer ) {
-            view.setSystemUiVisibility( (Integer) systemUiTag);
+        if (systemUiTag instanceof Integer) {
+            view.setSystemUiVisibility((Integer) systemUiTag);
             window.clearFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
         }
 
@@ -182,6 +184,7 @@ public class ExStatusBarUtils {
     public static void setStatusBarColor(Activity activity, int color) {
         setStatusBarColor(activity.getWindow(), color);
     }
+
     public static void setStatusBarColor(Window window, int color) {
         setStatusBarColor(window, color, false);
     }
@@ -310,10 +313,6 @@ public class ExStatusBarUtils {
             return "";
         }
     }
-
-    public static final int IS_SET_PADDING_KEY = 54648632;
-    private static final int STATUS_VIEW_ID = R.id.status_view;
-    private static final int TRANSLUCENT_VIEW_ID = R.id.translucent_view;
 
     //------------单色明暗度状态栏------------
 

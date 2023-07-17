@@ -3,7 +3,7 @@ package com.aliyun.auipusher;
 import android.view.View;
 import android.widget.FrameLayout;
 
-import com.aliyun.aliinteraction.common.base.exposable.Callback;
+import com.alivc.auicommon.common.base.exposable.Callback;
 import com.aliyun.auipusher.config.CanvasScale;
 
 /**
@@ -27,8 +27,9 @@ public interface LivePusherService {
 
     /**
      * 开始直播
-     *  @param pushUrl         手动指定推流Url
-     * @param callback        回调函数
+     *
+     * @param pushUrl  手动指定推流Url
+     * @param callback 回调函数
      */
     void startLive(String pushUrl, Callback<View> callback);
 
@@ -37,7 +38,7 @@ public interface LivePusherService {
      *
      * @param mode 想要设置的模式
      */
-    void setPreviewMode(@CanvasScale.Mode int mode);
+    void setPreviewMode(int mode);
 
     /**
      * 切换摄像头
@@ -133,5 +134,5 @@ public interface LivePusherService {
 
     void destroy();
 
-    void setRenderView(FrameLayout renderView,boolean isAnchor);
+    void setRenderView(FrameLayout renderView, boolean isAnchor);
 }

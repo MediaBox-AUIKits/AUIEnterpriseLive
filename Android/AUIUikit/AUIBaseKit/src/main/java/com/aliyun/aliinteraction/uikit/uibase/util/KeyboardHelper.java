@@ -21,12 +21,6 @@ public class KeyboardHelper {
 
     private OnSoftKeyBoardChangeListener onSoftKeyBoardChangeListener;
 
-    public interface OnSoftKeyBoardChangeListener {
-        void keyBoardShow(int height);
-
-        void keyBoardHide(int height);
-    }
-
     public KeyboardHelper(Activity activity) {
         this(activity, DEFAULT_VALVE);
     }
@@ -86,5 +80,11 @@ public class KeyboardHelper {
 
     public void setOnSoftKeyBoardChangeListener(OnSoftKeyBoardChangeListener onSoftKeyBoardChangeListener) {
         this.onSoftKeyBoardChangeListener = onSoftKeyBoardChangeListener;
+    }
+
+    public interface OnSoftKeyBoardChangeListener {
+        void keyBoardShow(int height);
+
+        void keyBoardHide(int height);
     }
 }

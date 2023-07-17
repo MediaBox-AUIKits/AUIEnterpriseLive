@@ -57,50 +57,6 @@ public class CustomItemAnimator extends SimpleItemAnimator {
     ArrayList<ViewHolder> mRemoveAnimations = new ArrayList<>();
     ArrayList<ViewHolder> mChangeAnimations = new ArrayList<>();
 
-    private static class MoveInfo {
-        public ViewHolder holder;
-        public int fromX, fromY, toX, toY;
-
-        MoveInfo(ViewHolder holder, int fromX, int fromY, int toX, int toY) {
-            this.holder = holder;
-            this.fromX = fromX;
-            this.fromY = fromY;
-            this.toX = toX;
-            this.toY = toY;
-        }
-    }
-
-    private static class ChangeInfo {
-        public ViewHolder oldHolder, newHolder;
-        public int fromX, fromY, toX, toY;
-
-        private ChangeInfo(ViewHolder oldHolder, ViewHolder newHolder) {
-            this.oldHolder = oldHolder;
-            this.newHolder = newHolder;
-        }
-
-        ChangeInfo(ViewHolder oldHolder, ViewHolder newHolder,
-                   int fromX, int fromY, int toX, int toY) {
-            this(oldHolder, newHolder);
-            this.fromX = fromX;
-            this.fromY = fromY;
-            this.toX = toX;
-            this.toY = toY;
-        }
-
-        @Override
-        public String toString() {
-            return "ChangeInfo{"
-                    + "oldHolder=" + oldHolder
-                    + ", newHolder=" + newHolder
-                    + ", fromX=" + fromX
-                    + ", fromY=" + fromY
-                    + ", toX=" + toX
-                    + ", toY=" + toY
-                    + '}';
-        }
-    }
-
     @Override
     public void runPendingAnimations() {
         boolean removalsPending = !mPendingRemovals.isEmpty();
@@ -388,22 +344,22 @@ public class CustomItemAnimator extends SimpleItemAnimator {
             mChangeAnimations.add(changeInfo.newHolder);
             newViewAnimation.translationX(0).translationY(0).setDuration(getChangeDuration())
                     .alpha(1).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationStart(Animator animator) {
-                    dispatchChangeStarting(changeInfo.newHolder, false);
-                }
+                        @Override
+                        public void onAnimationStart(Animator animator) {
+                            dispatchChangeStarting(changeInfo.newHolder, false);
+                        }
 
-                @Override
-                public void onAnimationEnd(Animator animator) {
-                    newViewAnimation.setListener(null);
-                    newView.setAlpha(1);
-                    newView.setTranslationX(0);
-                    newView.setTranslationY(0);
-                    dispatchChangeFinished(changeInfo.newHolder, false);
-                    mChangeAnimations.remove(changeInfo.newHolder);
-                    dispatchFinishedWhenDone();
-                }
-            }).start();
+                        @Override
+                        public void onAnimationEnd(Animator animator) {
+                            newViewAnimation.setListener(null);
+                            newView.setAlpha(1);
+                            newView.setTranslationX(0);
+                            newView.setTranslationY(0);
+                            dispatchChangeFinished(changeInfo.newHolder, false);
+                            mChangeAnimations.remove(changeInfo.newHolder);
+                            dispatchFinishedWhenDone();
+                        }
+                    }).start();
         }
     }
 
@@ -675,5 +631,49 @@ public class CustomItemAnimator extends SimpleItemAnimator {
     public boolean canReuseUpdatedViewHolder(@NonNull ViewHolder viewHolder,
                                              @NonNull List<Object> payloads) {
         return !payloads.isEmpty() || super.canReuseUpdatedViewHolder(viewHolder, payloads);
+    }
+
+    private static class MoveInfo {
+        public ViewHolder holder;
+        public int fromX, fromY, toX, toY;
+
+        MoveInfo(ViewHolder holder, int fromX, int fromY, int toX, int toY) {
+            this.holder = holder;
+            this.fromX = fromX;
+            this.fromY = fromY;
+            this.toX = toX;
+            this.toY = toY;
+        }
+    }
+
+    private static class ChangeInfo {
+        public ViewHolder oldHolder, newHolder;
+        public int fromX, fromY, toX, toY;
+
+        private ChangeInfo(ViewHolder oldHolder, ViewHolder newHolder) {
+            this.oldHolder = oldHolder;
+            this.newHolder = newHolder;
+        }
+
+        ChangeInfo(ViewHolder oldHolder, ViewHolder newHolder,
+                   int fromX, int fromY, int toX, int toY) {
+            this(oldHolder, newHolder);
+            this.fromX = fromX;
+            this.fromY = fromY;
+            this.toX = toX;
+            this.toY = toY;
+        }
+
+        @Override
+        public String toString() {
+            return "ChangeInfo{"
+                    + "oldHolder=" + oldHolder
+                    + ", newHolder=" + newHolder
+                    + ", fromX=" + fromX
+                    + ", fromY=" + fromY
+                    + ", toX=" + toX
+                    + ", toY=" + toY
+                    + '}';
+        }
     }
 }

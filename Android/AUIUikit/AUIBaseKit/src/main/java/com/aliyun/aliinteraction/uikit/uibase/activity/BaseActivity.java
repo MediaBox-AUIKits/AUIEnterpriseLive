@@ -9,10 +9,10 @@ import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.aliyun.aliinteraction.common.base.util.CommonUtil;
-import com.aliyun.aliinteraction.common.base.util.PermissionStrategy;
-import com.aliyun.aliinteraction.common.base.util.ThreadUtil;
-import com.aliyun.aliinteraction.common.base.util.Utils;
+import com.alivc.auicommon.common.base.util.CommonUtil;
+import com.alivc.auicommon.common.base.util.PermissionStrategy;
+import com.alivc.auicommon.common.base.util.ThreadUtil;
+import com.alivc.auicommon.common.base.util.Utils;
 import com.aliyun.aliinteraction.uikit.uibase.util.immersionbar.ImmersionBar;
 import com.aliyun.aliinteraction.uikit.uibase.view.IImmersiveSupport;
 
@@ -52,7 +52,7 @@ public abstract class BaseActivity extends AppCompatActivity implements IImmersi
         Utils.destroy(permissionStrategy);
     }
 
-    protected boolean permissionIgnoreStrictCheck(){
+    protected boolean permissionIgnoreStrictCheck() {
         return true;
     }
 
@@ -83,7 +83,7 @@ public abstract class BaseActivity extends AppCompatActivity implements IImmersi
         return false;
     }
 
-    protected Runnable actionWhenDisableImmersive(){
+    protected Runnable actionWhenDisableImmersive() {
         return null;
     }
 

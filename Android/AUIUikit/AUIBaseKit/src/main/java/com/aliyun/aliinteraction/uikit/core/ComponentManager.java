@@ -2,16 +2,16 @@ package com.aliyun.aliinteraction.uikit.core;
 
 import android.content.Intent;
 import android.content.res.Configuration;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.aliyun.aliinteraction.core.event.EventManager;
-import com.aliyun.aliinteraction.uikit.core.IComponent;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.alivc.auicommon.common.base.base.Consumer;
+import com.alivc.auicommon.common.base.util.CollectionUtil;
+import com.alivc.auicommon.core.event.EventManager;
 import com.aliyun.auiappserver.model.LiveModel;
-import com.aliyun.aliinteraction.common.base.base.Consumer;
-import com.aliyun.aliinteraction.common.base.util.CollectionUtil;
 import com.aliyun.auipusher.LiveContext;
 
 import java.util.ArrayList;
@@ -27,6 +27,16 @@ import java.util.List;
 public class ComponentManager extends EventManager {
 
     private final List<IComponent> components = new ArrayList<>();
+
+    private static void mergeNotRepeat(List<IComponent> origins, List<IComponent> added) {
+        if (CollectionUtil.isNotEmpty(added)) {
+            for (IComponent component : added) {
+                if (component != null && !origins.contains(component)) {
+                    origins.add(component);
+                }
+            }
+        }
+    }
 
     public void scanComponent(@NonNull View view) {
         List<IComponent> components = scanComponentInternal(view);
@@ -61,6 +71,7 @@ public class ComponentManager extends EventManager {
             }
         });
     }
+
     public void dispatchEnterRoomError(final String errorMsg) {
         dispatch(new Consumer<IComponent>() {
             @Override
@@ -158,15 +169,5 @@ public class ComponentManager extends EventManager {
             }
         }
         return result;
-    }
-
-    private static void mergeNotRepeat(List<IComponent> origins, List<IComponent> added) {
-        if (CollectionUtil.isNotEmpty(added)) {
-            for (IComponent component : added) {
-                if (component != null && !origins.contains(component)) {
-                    origins.add(component);
-                }
-            }
-        }
     }
 }

@@ -9,30 +9,42 @@
 #import "AUIRoomSDKHeader.h"
 #import "AUIRoomAccount.h"
 #import "AUIRoomAppServer.h"
+#import "AUIFoundation.h"
 
-@implementation AUIRoomMessage
+#if __has_include(<AlivcInteraction/AlivcInteraction.h>)
+#import <AlivcInteraction/AlivcInteraction.h>
+#define ENABLE_ALIVCINTERACTION
+#endif
 
-+ (id<AUIRoomMessageServiceProtocol>)currentService {
-    static AUIRoomMessageService *_instance = nil;
-    if (!_instance) {
-        _instance = [AUIRoomMessageService new];
-    }
-    return _instance;
+#define AUIRoomMessageTypeComment 10001
+#define AUIRoomMessageTypeLike    10002
+
+
+#ifdef ENABLE_ALIVCINTERACTION
+static NSError *s_error(AVCIInteractionError *error) {
+    return [NSError errorWithDomain:@"" code:error.code userInfo:@{NSLocalizedDescriptionKey:error.message?:@""}];
 }
+#endif
 
-@end
+@interface AUIRoomMessageService : NSObject <AUIRoomMessageServiceProtocol, AUIMessageServiceConnectionDelegate, AUIMessageListenerProtocol>
 
-
-
-@interface AUIRoomMessageService () <AVCIInteractionEngineDelegate, AVCIInteractionServiceDelegate>
-
+@property (nonatomic, strong) id<AUIMessageServiceProtocol> messageService;
 @property (nonatomic, strong) NSHashTable<id<AUIRoomMessageServiceObserver>> *observerList;
-@property (nonatomic, copy) void (^loginCompleted)(BOOL success);
 
 @end
 
 
 @implementation AUIRoomMessageService
+
+- (instancetype)init {
+    self = [super init];
+    if (self) {
+        self.messageService = [AUIMessageServiceFactory getMessageService];
+        [self.messageService setConnectionDelegate:self];
+        [[self.messageService getListenerObserver] addListener:self];
+    }
+    return self;
+}
 
 #pragma mark - Observer
 
@@ -44,8 +56,7 @@
 }
 
 - (void)addObserver:(id<AUIRoomMessageServiceObserver>)observer {
-    if ([self.observerList containsObject:observer])
-    {
+    if ([self.observerList containsObject:observer]) {
         return;
     }
     [self.observerList addObject:observer];
@@ -55,29 +66,20 @@
     [self.observerList removeObject:observer];
 }
 
-#pragma mark - IM
-
-- (AVCIInteractionEngine *)interactionEngine {
-    static AVCIInteractionEngine *_instance = nil;
-    if (!_instance) {
-        AVCIInteractionEngineConfig *interactionEngineConfig = [[AVCIInteractionEngineConfig alloc] init];
-        interactionEngineConfig.deviceID = AUIRoomAccount.deviceId;
-        interactionEngineConfig.requestToken = ^(void (^ _Nonnull onRequestedToken)(NSString * _Nonnull, NSString * _Nonnull)) {
-            [AUIRoomAppServer fetchToken:^(NSString * _Nullable accessToken, NSString * _Nullable refreshToken, NSError * _Nullable error) {
-                NSLog(@"accessToken:%@\nrefreshToken:%@", accessToken, refreshToken);
-                if (onRequestedToken) {
-                    onRequestedToken(refreshToken ?: @"", accessToken ?: @"");
-                }
-            }];
-        };
-        _instance = [[AVCIInteractionEngine alloc] initWithConfig:interactionEngineConfig];
-        _instance.delegate = self;
-    }
-    return _instance;
++ (void)fetchToken:(void(^)(NSString *finalToken, NSError *error))completed {
+    [AUIRoomAppServer fetchToken:^(NSString * _Nullable accessToken, NSString * _Nullable refreshToken, NSError * _Nullable error) {
+        if (completed) {
+#ifdef ENABLE_ALIVCINTERACTION
+            completed([NSString stringWithFormat:@"%@_%@", accessToken, refreshToken], error);
+#else
+            completed(accessToken, error);
+#endif
+        }
+    }];
 }
 
 - (void)login:(void(^)(BOOL))completed {
-    if (self.interactionEngine.isLogin) {
+    if (self.messageService.isLogin) {
         if (completed) {
             completed(YES);
         }
@@ -89,304 +91,321 @@
         }
         return;
     }
-    if (self.loginCompleted) {
-        // 上次调用login，此时返回失败
-        self.loginCompleted(NO);
-    }
-    self.loginCompleted = completed;
-    [self.interactionEngine loginWithUserID:AUIRoomAccount.me.userId];
+    
+    [AUIRoomMessageService fetchToken:^(NSString *finalToken, NSError *error) {
+        if (error) {
+            if (completed) {
+                completed(NO);
+            }
+            return;
+        }
+        
+        AUIMessageConfig *config = [AUIMessageConfig new];
+        config.token = finalToken;
+        [self.messageService setConfig:config];
+        
+        AUIMessageUserInfo *user = [AUIMessageUserInfo new];
+        user.userId = AUIRoomAccount.me.userId;
+        user.userNick = AUIRoomAccount.me.nickName;
+        user.userAvatar = AUIRoomAccount.me.avatar;
+        [self.messageService login:user callback:^(NSError * _Nullable error) {
+            if (completed) {
+                completed(error == nil);
+            }
+        }];
+    }];
 }
 
 - (void)logout {
-    if (!self.interactionEngine.isLogin) {
-        return;
+    [self.messageService logout:^(NSError * _Nullable error) {
+        
+    }];
+}
+
+- (void)joinGroup:(NSString *)groupID completed:(AUIMessageDefaultCallback)completed {
+    AUIMessageJoinGroupRequest *req = [AUIMessageJoinGroupRequest new];
+    req.groupId = groupID;
+    [self.messageService joinGroup:req callback:completed];
+}
+
+- (void)leaveGroup:(NSString *)groupID completed:(AUIMessageDefaultCallback)completed {
+    AUIMessageLeaveGroupRequest *req = [AUIMessageLeaveGroupRequest new];
+    req.groupId = groupID;
+    [self.messageService leaveGroup:req callback:completed];
+}
+
+- (void)muteAll:(NSString *)groupID completed:(AUIMessageDefaultCallback)completed {
+#ifdef ENABLE_ALIVCINTERACTION
+    AVCIInteractionEngine *interactionEngine = [self.messageService getNativeEngine];
+    
+    [interactionEngine.interactionService muteAll:groupID broadCastType:2 onSuccess:^{
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (completed) {
+                completed(nil);
+            }
+        });
+    } onFailure:^(AVCIInteractionError * _Nonnull error) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (completed) {
+                completed(s_error(error));
+            }
+        });
+    }];
+#else
+    [AUIRoomAppServer muteAll:groupID completed:completed];
+#endif
+}
+
+- (void)cancelMuteAll:(NSString *)groupID completed:(AUIMessageDefaultCallback)completed {
+#ifdef ENABLE_ALIVCINTERACTION
+    AVCIInteractionEngine *interactionEngine = [self.messageService getNativeEngine];
+    [interactionEngine.interactionService cancelMuteAll:groupID broadCastType:2 onSuccess:^{
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (completed) {
+                completed(nil);
+            }
+        });
+    } onFailure:^(AVCIInteractionError * _Nonnull error) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (completed) {
+                completed(s_error(error));
+            }
+        });
+    }];
+#else
+    [AUIRoomAppServer cancelMuteAll:groupID completed:completed];
+#endif
+}
+
+- (void)queryMuteAll:(NSString *)groupID completed:(void (^)(BOOL, NSError * _Nullable))completed {
+#ifdef ENABLE_ALIVCINTERACTION
+    AVCIInteractionEngine *interactionEngine = [self.messageService getNativeEngine];
+    [interactionEngine.interactionService getGroup:groupID onSuccess:^(AVCIInteractionGroupDetail * _Nonnull groupDetail) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (completed) {
+                completed(groupDetail.isMuteAll, nil);
+            }
+        });
+    } onFailure:^(AVCIInteractionError * _Nonnull error) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (completed) {
+                completed(NO ,s_error(error));
+            }
+        });
+    }];
+#else
+    [AUIRoomAppServer queryMuteAll:groupID completed:completed];
+#endif
+}
+
+- (void)sendLike:(NSString *)groupID count:(NSUInteger)count completed:(AUIMessageDefaultCallback)completed {
+#ifdef ENABLE_ALIVCINTERACTION
+    AVCIInteractionEngine *interactionEngine = [self.messageService getNativeEngine];
+    [interactionEngine.interactionService sendLikeWithGroupID:groupID count:(int32_t)count broadCastType:2 onSuccess:^{
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (completed) {
+                completed(nil);
+            }
+        });
+    } onFailure:^(AVCIInteractionError * _Nonnull error) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (completed) {
+                completed(s_error(error));
+            }
+        });
+    }];
+#else
+    [AUIRoomAppServer sendLike:groupID count:count completed:completed];
+#endif
+}
+
+- (void)sendComment:(NSString *)groupID comment:(NSDictionary *)comment completed:(AUIMessageDefaultCallback)completed {
+    AUIMessageSendMessageToGroupRequest *req = [AUIMessageSendMessageToGroupRequest new];
+    req.groupId = groupID;
+    req.data = [[AUIMessageDefaultData alloc] initWithData:comment];
+    req.msgType = AUIRoomMessageTypeComment;
+    req.skipAudit = NO;
+    [self.messageService sendMessageToGroup:req callback:^(AUIMessageSendMessageToGroupResponse * _Nullable rsp, NSError * _Nullable error) {
+        if (completed) {
+            completed(error);
+        }
+    }];
+}
+
+- (void)sendCommand:(NSInteger)type data:(id<AUIMessageDataProtocol>)data groupID:(NSString *)groupID receiverId:(NSString *)receiverId completed:(AUIMessageDefaultCallback)completed {
+    if (receiverId.length > 0) {
+        AUIMessageSendMessageToGroupUserRequest *req = [AUIMessageSendMessageToGroupUserRequest new];
+        req.groupId = groupID;
+        req.data = data;
+        req.msgType = type;
+        req.receiverId = receiverId;
+        [self.messageService sendMessageToGroupUser:req callback:^(AUIMessageSendMessageToGroupUserResponse * _Nullable rsp, NSError * _Nullable error) {
+            if (completed) {
+                completed(error);
+            }
+        }];
     }
-    [self.interactionEngine logoutOnSuccess:^{
-        ;
-    } onFailure:^(AVCIInteractionError * _Nonnull error) {
-        NSAssert(NO, @"Logout failure");
-    }];
-}
-
-#pragma mark - AUIRoomMessageServiceAction
-
-static NSError *s_error(AVCIInteractionError *error) {
-    return [NSError errorWithDomain:@"" code:error.code userInfo:@{NSLocalizedDescriptionKey:error.message?:@""}];
-}
-
-- (void)joinGroup:(NSString *)groupID
-        extension:(NSString *)userExtension
-        onSuccess:(void (^)(void))onSuccess
-        onFailure:(void (^)(NSError *error))onFailure {
-    [self.interactionEngine.interactionService joinGroup:groupID userNick:AUIRoomAccount.me.nickName userAvatar:AUIRoomAccount.me.avatar userExtension:userExtension ?: @"{}" broadCastType:2 broadCastStatistics:YES onSuccess:^{
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (onSuccess) {
-                onSuccess();
+    else if (groupID.length > 0) {
+        AUIMessageSendMessageToGroupRequest *req = [AUIMessageSendMessageToGroupRequest new];
+        req.groupId = groupID;
+        req.data = data;
+        req.msgType = type;
+        req.skipAudit = YES;
+        [self.messageService sendMessageToGroup:req callback:^(AUIMessageSendMessageToGroupResponse * _Nullable rsp, NSError * _Nullable error) {
+            if (completed) {
+                completed(error);
             }
-        });
-    } onFailure:^(AVCIInteractionError * _Nonnull error) {
-        NSLog(@"IM Error:joinGroup(%d,%@)", error.code, error.message);
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (onFailure) {
-                onFailure(s_error(error));
-            }
-        });
-    }];
-}
-
-- (void)leaveGroup:(NSString *)groupID
-          onSuccess:(void (^)(void))onSuccess
-         onFailure:(void (^)(NSError *error))onFailure {
-    [self.interactionEngine.interactionService leaveGroup:groupID broadCastType:0 onSuccess:^{
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (onSuccess) {
-                onSuccess();
-            }
-        });
-    } onFailure:^(AVCIInteractionError * _Nonnull error) {
-        NSLog(@"IM Error:leaveGroup(%d,%@)", error.code, error.message);
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (onFailure) {
-                onFailure(s_error(error));
-            }
-        });
-    }];
-}
-
-- (void)muteAll:(NSString *)groupID
-      onSuccess:(void (^)(void))onSuccess
-      onFailure:(void (^)(NSError* error))onFailure {
-    [self.interactionEngine.interactionService muteAll:groupID broadCastType:2 onSuccess:^{
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (onSuccess) {
-                onSuccess();
-            }
-        });
-    } onFailure:^(AVCIInteractionError * _Nonnull error) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (onFailure) {
-                onFailure(s_error(error));
-            }
-        });
-    }];
-}
-
-- (void)cancelMuteAll:(NSString *)groupID
-            onSuccess:(void (^)(void))onSuccess
-            onFailure:(void (^)(NSError* error))onFailure {
-    [self.interactionEngine.interactionService cancelMuteAll:groupID broadCastType:2 onSuccess:^{
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (onSuccess) {
-                onSuccess();
-            }
-        });
-    } onFailure:^(AVCIInteractionError * _Nonnull error) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (onFailure) {
-                onFailure(s_error(error));
-            }
-        });
-    }];
-}
-
-- (void)queryMuteAll:(NSString *)groupID
-          onSuccess:(void (^)(BOOL isMuteAll))onSuccess
-           onFailure:(void (^)(NSError * error))onFailure {
-    [self.interactionEngine.interactionService getGroup:groupID onSuccess:^(AVCIInteractionGroupDetail * _Nonnull groupDetail) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (onSuccess) {
-                onSuccess(groupDetail.isMuteAll);
-            }
-        });
-    } onFailure:^(AVCIInteractionError * _Nonnull error) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (onFailure) {
-                onFailure(s_error(error));
-            }
-        });
-    }];
-}
-
-- (void)listMuteUsers:(NSString *)groupID
-            onSuccess:(void (^)(NSArray<NSString *> *ids))onSuccess
-            onFailure:(void (^)(NSError * error))onFailure {
-    [self.interactionEngine.interactionService listMuteUsersWithGroupID:groupID onSuccess:^(NSArray<AVCIInteractionMuteUser *> * _Nonnull users) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            NSMutableArray *ids = [NSMutableArray array];
-            [users enumerateObjectsUsingBlock:^(AVCIInteractionMuteUser * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-                [ids addObject:obj.userId];
-            }];
-            if (onSuccess) {
-                onSuccess(ids);
-            }
-        });
-    } onFailure:^(AVCIInteractionError * _Nonnull error) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (onFailure) {
-                onFailure(s_error(error));
-            }
-        });
-    }];
-}
-
--(void)sendLike:(NSString *)groupID
-          count:(NSUInteger)count
-      onSuccess:(void (^)(void))onSuccess
-      onFailure:(void (^)(NSError * error))onFailure {
-    [self.interactionEngine.interactionService sendLikeWithGroupID:groupID count:(int32_t)count broadCastType:2 onSuccess:^{
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (onSuccess) {
-                onSuccess();
-            }
-        });
-    } onFailure:^(AVCIInteractionError * _Nonnull error) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (onFailure) {
-                onFailure(s_error(error));
-            }
-        });
-    }];
-}
-
-
-- (void)sendTextMessage:(NSString *)groupID
-                userIDs:(NSArray *)userIDs
-                message:(NSString *)message
-                   type:(AUIRoomMessageType)type
-          skipMuteCheck:(BOOL)skipMuteCheck
-              skipAudit:(BOOL)skipAudit
-              onSuccess:(nonnull void (^)(void))onSuccess
-              onFailure:(nonnull void (^)(NSError * error))onFailure {
-    if (userIDs.count > 0) {
-        [self.interactionEngine.interactionService sendTextMessageToGroupUsers:message groupID:groupID type:(int32_t)type userIDs:userIDs skipMuteCheck:skipMuteCheck skipAudit:skipAudit onSuccess:^{
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if (onSuccess) {
-                    onSuccess();
-                }
-            });
-        } onFailure:^(AVCIInteractionError * _Nonnull error) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if (onFailure) {
-                    onFailure(s_error(error));
-                }
-            });
         }];
     }
     else {
-        [self.interactionEngine.interactionService sendTextMessage:message groupID:groupID type:(int32_t)type skipMuteCheck:skipMuteCheck skipAudit:skipAudit onSuccess:^{
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if (onSuccess) {
-                    onSuccess();
-                }
-            });
-        } onFailure:^(AVCIInteractionError * _Nonnull error) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if (onFailure) {
-                    onFailure(s_error(error));
-                }
-            });
-        }];
+        if (completed) {
+            completed([NSError errorWithDomain:@"message.service" code:-1 userInfo:@{NSLocalizedDescriptionKey:@"参数出错"}]);
+        }
     }
 }
-                 
-#pragma mark - AVCIInteractionEngineDelegate
 
-- (void)onKickout:(NSString *)info {
-    ;
+#pragma mark - AUIMessageServiceConnectionDelegate
+
+- (void)onTokenExpire:(void (^)(NSString * _Nonnull, NSError * _Nonnull))onRequestedNewToken {
+    [AUIRoomMessageService fetchToken:onRequestedNewToken];
 }
 
-- (void)onError:(AVCIInteractionError *)error {
-    NSLog(@"onConnectiononError:%d, message:%@", error.code, error.message);
-}
+#pragma mark - AUIMessageListenerProtocol
 
-- (void)onConnectionStatusChanged:(int32_t)status {
-    NSLog(@"onConnectionStatusChanged:%d", status);
-    dispatch_async(dispatch_get_main_queue(), ^{
-        if (status == 4) {
-            self.interactionEngine.interactionService.delegate = self;
-            if (self.loginCompleted) {
-                self.loginCompleted(YES);
+- (void)onJoinGroup:(AUIMessageModel *)model {
+    NSEnumerator<id<AUIRoomMessageServiceObserver>>* enumerator = [self.observerList objectEnumerator];
+    id<AUIRoomMessageServiceObserver> observer = nil;
+    while ((observer = [enumerator nextObject])) {
+        if ([observer.groupId isEqualToString:model.groupId]) {
+            if ([observer respondsToSelector:@selector(onJoinGroup:)]) {
+                [observer onJoinGroup:model];
             }
-            self.loginCompleted = nil;
         }
-    });
-}
-
-- (void)onLog:(NSString *)log level:(AliInteractionLogLevel)level {
-    NSLog(@"[IMSDK]:%@", log);
-}
-
-#pragma mark - AVCIInteractionServiceDelegate
-
-- (void)onCustomMessageReceived:(AVCIInteractionGroupMessage *)message {
-    [self onMessageReceived:message selector:@selector(onCustomMessageReceived:)];
-}
-
-- (void)onLikeReceived:(AVCIInteractionGroupMessage *)message {
-    [self onMessageReceived:message selector:@selector(onLikeReceived:)];
-}
-
-- (void)onJoinGroup:(AVCIInteractionGroupMessage *)message {
-    [self onMessageReceived:message selector:@selector(onJoinGroup:)];
-}
-
-- (void)onLeaveGroup:(AVCIInteractionGroupMessage *)message {
-    [self onMessageReceived:message selector:@selector(onLeaveGroup:)];
-}
-
-- (void)onMuteGroup:(AVCIInteractionGroupMessage *)message {
-    [self onMessageReceived:message selector:@selector(onMuteGroup:)];
-}
-
-- (void)onCancelMuteGroup:(AVCIInteractionGroupMessage *)message {
-    [self onMessageReceived:message selector:@selector(onCancelMuteGroup:)];
-}
-
-- (void)onMuteUser:(AVCIInteractionGroupMessage *)message {
-    [self onMessageReceived:message selector:@selector(onMuteUser:)];
-}
-
-- (void)onCancelMuteUser:(AVCIInteractionGroupMessage *)message {
-    [self onMessageReceived:message selector:@selector(onCancelMuteUser:)];
-}
-
-- (void)onMessageReceived:(AVCIInteractionGroupMessage *)message selector:(SEL)selector {
-    NSLog(@"onMessageReceived:%@, type:%d, gid:%@, uid:%@, nick_name:%@", message.data, message.type, message.groupId, message.senderInfo.userID, message.senderInfo.userNick);
+    }
     
-    AUIRoomMessageModel *model = [AUIRoomMessageModel new];
-    model.msgId = message.messageId;
-    model.msgType = message.type;
-    model.data = [self dictFromMessage:message];
-    model.sender = [self senderFromMessage:message];
+#ifdef ENABLE_ALIVCINTERACTION
+    NSDictionary *stat = [model.data objectForKey:@"statistics"];
+    if (stat) {
+        AUIMessageModel *statMessageModel = [AUIMessageModel new];
+        statMessageModel.groupId = model.groupId;
+        statMessageModel.sender = model.sender;
+        statMessageModel.data = stat;
+        statMessageModel.messageId = model.messageId;
+        
+        enumerator = [self.observerList objectEnumerator];
+        while ((observer = [enumerator nextObject])) {
+            if ([observer.groupId isEqualToString:statMessageModel.groupId]) {
+                if ([observer respondsToSelector:@selector(onPVReceived:)]) {
+                    [observer onPVReceived:statMessageModel];
+                }
+                if ([observer respondsToSelector:@selector(onLikeReceived:)]) {
+                    [observer onLikeReceived:statMessageModel];
+                }
+            }
+        }
+    }
+#endif
+}
+
+- (void)onLeaveGroup:(AUIMessageModel *)model {
+    NSEnumerator<id<AUIRoomMessageServiceObserver>>* enumerator = [self.observerList objectEnumerator];
+    id<AUIRoomMessageServiceObserver> observer = nil;
+    while ((observer = [enumerator nextObject])) {
+        if ([observer.groupId isEqualToString:model.groupId]) {
+            if ([observer respondsToSelector:@selector(onLeaveGroup:)]) {
+                [observer onLeaveGroup:model];
+            }
+        }
+    }
+}
+
+- (void)onMuteGroup:(AUIMessageModel *)model {
+    NSEnumerator<id<AUIRoomMessageServiceObserver>>* enumerator = [self.observerList objectEnumerator];
+    id<AUIRoomMessageServiceObserver> observer = nil;
+    while ((observer = [enumerator nextObject])) {
+        if ([observer.groupId isEqualToString:model.groupId]) {
+            if ([observer respondsToSelector:@selector(onMuteGroup:)]) {
+                [observer onMuteGroup:model];
+            }
+        }
+    }
+}
+
+- (void)onUnmuteGroup:(AUIMessageModel *)model {
+    NSEnumerator<id<AUIRoomMessageServiceObserver>>* enumerator = [self.observerList objectEnumerator];
+    id<AUIRoomMessageServiceObserver> observer = nil;
+    while ((observer = [enumerator nextObject])) {
+        if ([observer.groupId isEqualToString:model.groupId]) {
+            if ([observer respondsToSelector:@selector(onCancelMuteGroup:)]) {
+                [observer onCancelMuteGroup:model];
+            }
+        }
+    }
+}
+
+- (void)onMessageReceived:(AUIMessageModel *)model {
     
-    dispatch_async(dispatch_get_main_queue(), ^{
+    if (model.msgType == AUIRoomMessageTypeComment) {
         NSEnumerator<id<AUIRoomMessageServiceObserver>>* enumerator = [self.observerList objectEnumerator];
         id<AUIRoomMessageServiceObserver> observer = nil;
         while ((observer = [enumerator nextObject])) {
-            if ([observer.groupId isEqualToString:message.groupId]) {
-                [observer performSelector:selector withObject:model];
+            if ([observer.groupId isEqualToString:model.groupId]) {
+                if ([observer respondsToSelector:@selector(onCommentReceived:)]) {
+                    [observer onCommentReceived:model];
+                }
             }
         }
-    });
+    }
+#ifdef ENABLE_ALIVCINTERACTION
+    else if (model.msgType == 1001) {  // 阿里互动消息SDK定义的"点赞"类型为1001
+        NSEnumerator<id<AUIRoomMessageServiceObserver>>* enumerator = [self.observerList objectEnumerator];
+        id<AUIRoomMessageServiceObserver> observer = nil;
+        while ((observer = [enumerator nextObject])) {
+            if ([observer.groupId isEqualToString:model.groupId]) {
+                if ([observer respondsToSelector:@selector(onLikeReceived:)]) {
+                    [observer onLikeReceived:model];
+                }
+            }
+        }
+    }
+#else
+    else if (model.msgType == AUIRoomMessageTypeLike) {
+        // 通过接口发送点赞数据，服务端接收到点赞数进行处理后（客户自行实现），在群内广播点赞总数
+        NSEnumerator<id<AUIRoomMessageServiceObserver>>* enumerator = [self.observerList objectEnumerator];
+        id<AUIRoomMessageServiceObserver> observer = nil;
+        while ((observer = [enumerator nextObject])) {
+            if ([observer.groupId isEqualToString:model.groupId]) {
+                if ([observer respondsToSelector:@selector(onLikeReceived:)]) {
+                    [observer onLikeReceived:model];
+                }
+            }
+        }
+    }
+#endif
+    else {
+        NSEnumerator<id<AUIRoomMessageServiceObserver>>* enumerator = [self.observerList objectEnumerator];
+        id<AUIRoomMessageServiceObserver> observer = nil;
+        while ((observer = [enumerator nextObject])) {
+            if ([observer.groupId isEqualToString:model.groupId]) {
+                if ([observer respondsToSelector:@selector(onCommandReceived:)]) {
+                    [observer onCommandReceived:model];
+                }
+            }
+        }
+    }
 }
 
-- (AUIRoomUser *)senderFromMessage:(AVCIInteractionGroupMessage *)message {
-    AUIRoomUser *sender = [AUIRoomUser new];
-    sender.userId = message.senderInfo.userID ?: message.senderId;
-    sender.nickName = message.senderInfo.userNick;
-    sender.avatar = message.senderInfo.userAvatar;
-    return sender;
-}
+@end
 
-- (NSDictionary *)dictFromMessage:(AVCIInteractionGroupMessage *)message {
-    NSDictionary *dict = nil;
-    if ([message.data isKindOfClass:NSDictionary.class]) {
-        dict = message.data;
+
+@implementation AUIRoomMessage
+
++ (id<AUIRoomMessageServiceProtocol>)currentService {
+    static AUIRoomMessageService *_instance = nil;
+    if (!_instance) {
+        _instance = [AUIRoomMessageService new];
     }
-    else if ([message.data isKindOfClass:NSString.class]) {
-        dict = [NSJSONSerialization JSONObjectWithData:[message.data dataUsingEncoding:NSUTF8StringEncoding] options:kNilOptions error:nil];
-    }
-    return dict;
+    return _instance;
 }
 
 @end

@@ -10,14 +10,13 @@ import android.widget.Toast;
 import androidx.annotation.CallSuper;
 import androidx.annotation.Nullable;
 
-import com.aliyun.aliinteraction.InteractionService;
-import com.aliyun.aliinteraction.common.biz.exposable.enums.LiveStatus;
-import com.aliyun.aliinteraction.common.roombase.Const;
-import com.aliyun.aliinteraction.core.event.EventListener;
-import com.aliyun.aliinteraction.core.event.EventManager;
+import com.alivc.auicommon.common.biz.exposable.enums.LiveStatus;
+import com.alivc.auicommon.common.roombase.Const;
+import com.alivc.auicommon.core.event.EventListener;
+import com.alivc.auicommon.core.event.EventManager;
 import com.aliyun.aliinteraction.player.LivePlayerService;
-import com.aliyun.auiappserver.model.LiveModel;
 import com.aliyun.aliinteraction.roompaas.message.AUIMessageService;
+import com.aliyun.auiappserver.model.LiveModel;
 import com.aliyun.auipusher.LiveContext;
 import com.aliyun.auipusher.LiveRole;
 import com.aliyun.auipusher.LiveService;
@@ -28,7 +27,6 @@ public class BaseComponent implements IComponent, EventListener {
     protected LiveContext liveContext;
     protected EventManager eventManager;
     protected Activity activity;
-    protected InteractionService interactionService;
     protected LiveService liveService;
 
     @CallSuper
@@ -38,7 +36,6 @@ public class BaseComponent implements IComponent, EventListener {
         this.eventManager = liveContext.getEventManager();
         this.eventManager.register(this);
         this.activity = liveContext.getActivity();
-        this.interactionService = liveContext.getInteractionService();
         this.liveService = liveContext.getLiveService();
     }
 
@@ -152,9 +149,9 @@ public class BaseComponent implements IComponent, EventListener {
         return liveContext.getLivePlayerService();
     }
 
-//    public LiveLinkMicPushManager getLiveLinkMicPushManager() {
-//        return liveContext.getLiveLinkMicPushManager();
-//    }
+    public LiveLinkMicPushManager getLiveLinkMicPushManager() {
+        return liveContext.getLiveLinkMicPushManager();
+    }
 
     public boolean supportLinkMic() {
         return liveContext.getLiveModel().mode != 0;
