@@ -27,7 +27,7 @@ AUI Kits 互动直播场景（横屏样式）集成工具是阿里云针对企�
 - 准备 iOS 10.0 及以上版本的真机
 
 ### 前提条件
-获取音视频终端SDK License和key，需要包含推流、播放、美颜的授权。
+获取音视频终端SDK License和key，需要包含播放的授权。
 参考[获取License](https://help.aliyun.com/document_detail/438207.html)
 
 
@@ -43,15 +43,15 @@ AUI Kits 互动直播场景（横屏样式）集成工具是阿里云针对企�
 
 
 ## 快速集成
-可通过以下几个步骤快速集成AUIEnterpriseLive到你的APP中，让你的APP具备企业直播功能
+可通过以下几个步骤快速集成AUIEnterpriseLive到你的APP中，让你的APP具备互动直播功能
 
 ### 导入源码
-- 导入AUIEnterpriseLive：仓库代码下载后，拷贝iOS文件夹到你的APP代码目录下，改名为AUIEnterpriseLive，与你的Podfile文件在同一层级，可以删除Example目录
+- 导入AUIEnterpriseLive：仓库代码下载后，拷贝iOS文件夹到你的APP代码目录下，改名为AUIEnterpriseLive，与你的Podfile文件在同一层级，可以删除里面的Example目录
 - 修改你的Podfile，引入：
-  - AliVCSDK_PremiumLive：适用于互动直播的音视频终端SDK，也可以使用AliVCSDK_Premium，参考[SDK说明](https://help.aliyun.com/document_detail/440004.html#section-icw-ppu-dll)
+  - AliVCSDK_PremiumLive：适用于互动直播的音视频终端SDK，也可以使用AliVCSDK_Premium，参考[快速集成](https://help.aliyun.com/document_detail/2412571.html)
   - AUIFoundation：基础UI组件
   - AUIMessage：互动消息组件
-  - AUIEnterpriseLive：企业直播UI组件源码，根据自身的业务，有需要可以对组件代码进行修改
+  - AUIEnterpriseLive：互动直播横屏样式UI组件源码，根据自身的业务，有需要可以对组件代码进行修改
 ```ruby
 
 #需要iOS10.0及以上才能支持
@@ -60,7 +60,7 @@ platform :ios, '10.0'
 target '你的App target' do
     # 根据自己的业务场景，集成合适的音视频终端SDK
     # 如果你的APP中还需要频短视频编辑功能，可以使用音视频终端全功能SDK（AliVCSDK_Premium），可以把本文件中的所有AliVCSDK_PremiumLive替换为AliVCSDK_Premium
-    pod 'AliVCSDK_PremiumLive', '~> 1.8.0'
+    pod 'AliVCSDK_PremiumLive', '~> 6.2.0'
     
     # 基础UI组件
     pod 'AUIFoundation/All', :path => "../AUIEnterpriseLive/AUIBaseKits/AUIFoundation/"
@@ -68,7 +68,7 @@ target '你的App target' do
     # 互动消息组件
     pod 'AUIMessage/Alivc', :path => "../AUIEnterpriseLive/AUIBaseKits/AUIMessage/"
     
-    # 互动直播UI组件，如果终端SDK使用的是AliVCSDK_Premium，需要AliVCSDK_PremiumLive替换为AliVCSDK_Premium
+    # 互动直播横屏样式UI组件，如果终端SDK使用的是AliVCSDK_Premium，需要AliVCSDK_PremiumLive替换为AliVCSDK_Premium
     pod 'AUIEnterpriseLive/AliVCSDK_PremiumLive',  :path => "./AUIEnterpriseLive/"
 
 end
@@ -80,7 +80,7 @@ end
 - 编译设置
   - 配置Build Setting > Linking > Other Linker Flags ，添加-ObjC。
   - 配置Build Setting > Build Options > Enable Bitcode，设为NO。
-- 配置License，参考[License配置](https://help.aliyun.com/document_detail/440004.html#section-51r-40z-j1w)
+- 配置License，参考[License配置](https://help.aliyun.com/document_detail/2391513.html#V7KgU)
 
 
 ### API调用
