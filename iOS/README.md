@@ -63,10 +63,10 @@ target '你的App target' do
     pod 'AliVCSDK_PremiumLive', '~> 6.2.0'
     
     # 基础UI组件
-    pod 'AUIFoundation/All', :path => "../AUIEnterpriseLive/AUIBaseKits/AUIFoundation/"
+    pod 'AUIFoundation/All', :path => "./AUIEnterpriseLive/AUIBaseKits/AUIFoundation/"
 
     # 互动消息组件
-    pod 'AUIMessage/Alivc', :path => "../AUIEnterpriseLive/AUIBaseKits/AUIMessage/"
+    pod 'AUIMessage/Alivc', :path => "./AUIEnterpriseLive/AUIBaseKits/AUIMessage/"
     
     # 互动直播横屏样式UI组件，如果终端SDK使用的是AliVCSDK_Premium，需要AliVCSDK_PremiumLive替换为AliVCSDK_Premium
     pod 'AUIEnterpriseLive/AliVCSDK_PremiumLive',  :path => "./AUIEnterpriseLive/"
