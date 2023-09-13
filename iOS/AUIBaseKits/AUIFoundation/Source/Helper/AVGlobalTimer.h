@@ -1,5 +1,5 @@
 //
-//  AVTimer.h
+//  AVGlobalTimer.h
 //  AUIFoundation
 //
 //  Created by coder.pi on 2022/6/15.
@@ -13,8 +13,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)onAVTimerStepWithDuration:(NSTimeInterval)duration settingInterval:(NSTimeInterval)interval;
 @end
 
-@interface AVTimer : NSObject
-+ (AVTimer *) Shared;
+@interface AVGlobalTimer : NSObject
++ (AVGlobalTimer *) Shared;
 - (NSUInteger)startTimer:(NSTimeInterval)interval withTarget:(id<AVTimerDelegate>)target;
 - (BOOL)stopTimerWithTarget:(id<AVTimerDelegate>)target;
 - (BOOL)stopTimerWithId:(NSUInteger)timerId;

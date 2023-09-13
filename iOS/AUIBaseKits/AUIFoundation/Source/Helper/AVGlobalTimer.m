@@ -1,11 +1,11 @@
 //
-//  AVTimer.m
+//  AVGlobalTimer.m
 //  AUIFoundation
 //
 //  Created by coder.pi on 2022/6/15.
 //
 
-#import "AVTimer.h"
+#import "AVGlobalTimer.h"
 
 @interface __AVTimerInfo : NSObject
 @property (nonatomic, readonly) NSUInteger timerId;
@@ -52,11 +52,11 @@
 @end
 
 @interface __DisplayLinkObserver : NSObject
-@property (nonatomic, weak) AVTimer *weakTimer;
+@property (nonatomic, weak) AVGlobalTimer *weakTimer;
 - (void) onDisplayLinkCallback:(CADisplayLink *)displayLink;
 @end
 
-@interface AVTimer ()
+@interface AVGlobalTimer ()
 @property (nonatomic, assign) NSUInteger currentTimerId;
 @property (nonatomic, strong) NSMutableArray<__AVTimerInfo *> *timerInfos;
 @property (nonatomic, strong) CADisplayLink *displayLink;
@@ -64,13 +64,13 @@
 @property (nonatomic, strong) __DisplayLinkObserver *displayLinkObserver;
 @end
 
-@implementation AVTimer
+@implementation AVGlobalTimer
 
-+ (AVTimer *) Shared {
++ (AVGlobalTimer *) Shared {
     static dispatch_once_t onceToken;
-    static AVTimer *s_shared;
+    static AVGlobalTimer *s_shared;
     dispatch_once(&onceToken, ^{
-        s_shared = [AVTimer new];
+        s_shared = [AVGlobalTimer new];
     });
     return s_shared;
 }

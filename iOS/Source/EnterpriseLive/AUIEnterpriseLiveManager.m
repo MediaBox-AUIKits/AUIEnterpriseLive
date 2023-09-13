@@ -45,6 +45,9 @@ static NSString * const kLiveServiceDomainString = @"https://appserverjava.h5vid
     [AlivcBase setIntegrationWay:@"aui-live-enterprise"];
     [AlivcLiveBase registerSDK];
 
+    [AliPlayer setEnableLog:NO];
+    [AliPlayer setLogCallbackInfo:LOG_LEVEL_NONE callbackBlock:nil];
+    
 #if DEBUG
     [AlivcLiveBase setLogLevel:AlivcLivePushLogLevelDebug];
     [AlivcLiveBase setLogPath:NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject maxPartFileSizeInKB:1024*100];
