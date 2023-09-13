@@ -60,7 +60,7 @@ platform :ios, '10.0'
 target '你的App target' do
     # 根据自己的业务场景，集成合适的音视频终端SDK
     # 如果你的APP中还需要频短视频编辑功能，可以使用音视频终端全功能SDK（AliVCSDK_Premium），可以把本文件中的所有AliVCSDK_PremiumLive替换为AliVCSDK_Premium
-    pod 'AliVCSDK_PremiumLive', '~> 6.2.0'
+    pod 'AliVCSDK_PremiumLive', '~> 6.4.0'
     
     # 基础UI组件
     pod 'AUIFoundation/All', :path => "./AUIEnterpriseLive/AUIBaseKits/AUIFoundation/"
