@@ -77,9 +77,11 @@ end
 - 源码集成完成
 
 ### 工程配置
+- 支持横屏全屏模式，需要打开右横屏配置
+  - 点击Project > 点击Target > General > Device Orientation > 打勾”Landscape Right“
 - 编译设置
-  - 配置Build Setting > Linking > Other Linker Flags ，添加-ObjC。
-  - 配置Build Setting > Build Options > Enable Bitcode，设为NO。
+  - 点击Project > 点击Target > Build Setting > Linking > Other Linker Flags ，添加-ObjC。
+  - 点击Project > 点击Target > Build Setting > Build Options > Enable Bitcode，设为NO。
 - 配置License，参考[License配置](https://help.aliyun.com/document_detail/2391513.html#V7KgU)
 
 
