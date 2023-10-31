@@ -21,3 +21,7 @@
 * Android&iOS：架构优化&问题修复
 * Android&iOS：升级MediaBoxSDK到v6.4.0
 * Android&iOS：升级AlivcInteractionSDK，修复AUIMessage组件问题
+
+## v2.2.0
+发布时间：2023-10-31
+* uni-app：发布 uni-app 版观众端工程，支持编译为微信小程序和 H5
