@@ -248,7 +248,7 @@ public class RoomListActivity extends AppBaseActivity {
         request.userId = Const.getUserId();
         request.pageNum = targetPage;
         request.pageSize = PAGE_SIZE;
-        AppServerApi.instance().getLiveList(request).invoke(new InteractionCallback<List<LiveModel>>() {
+        AppServerApi.instance().fetchLiveList(request).invoke(new InteractionCallback<List<LiveModel>>() {
             @Override
             public void onSuccess(List<LiveModel> data) {
                 isRequesting = false;
