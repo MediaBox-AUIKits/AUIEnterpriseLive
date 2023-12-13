@@ -16,7 +16,7 @@
 #import "AUIFoundation.h"
 #import "AUIRoomSDKHeader.h"
 
-static NSString * const kLiveServiceDomainString = @"https://appserverjava.h5video.vip";
+static NSString * const kLiveServiceDomainString = @"http://aui-newppserver-aui-newppserver-kvwbhrkfkw.cn-shanghai.fcapp.run";
 
 @interface AUIEnterpriseLiveManager ()
 
@@ -40,6 +40,10 @@ static NSString * const kLiveServiceDomainString = @"https://appserverjava.h5vid
     
     // 设置AppServer地址
     [AUIRoomAppServer setServiceUrl:kLiveServiceDomainString];
+    
+    //初始化IM
+    [AUIRoomMessage useAlivcIMWhenCompatMode:NO];
+    [AUIRoomAppServer setIMServers:AUIRoomMessage.currentIMServers];
     
     // 初始化SDK
     [AlivcBase setIntegrationWay:@"aui-live-enterprise"];

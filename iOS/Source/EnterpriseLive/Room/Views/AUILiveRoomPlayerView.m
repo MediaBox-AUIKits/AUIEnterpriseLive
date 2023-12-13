@@ -263,8 +263,9 @@
             }
             else {
                 void (^destroyBlock)(void) = ^{
-                    [weakSelf.liveManager leaveRoom:nil];
-                    [weakSelf.liveManager.roomVC.navigationController popViewControllerAnimated:YES];
+                    [weakSelf.liveManager leaveRoom:^(BOOL success) {
+                        [weakSelf.liveManager.roomVC.navigationController popViewControllerAnimated:YES];
+                    }];
                 };
                 destroyBlock();
             }
