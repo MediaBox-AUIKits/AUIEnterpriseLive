@@ -11,6 +11,7 @@ import classNames from 'classnames';
 import { RoomContext } from '../../RoomContext';
 import { CustomMessageTypes } from '../../types';
 import styles from './index.less';
+import { AUIMessageEvents } from '@/BaseKits/AUIMessage/types';
 
 export const IntroTabKey = 'intro';
 export const ChatTabKey = 'chat';
@@ -25,7 +26,7 @@ interface IH5Tabs {
 const H5Tabs: React.FC<IH5Tabs> = (props: IH5Tabs) => {
   const { value, tabs, onChange } = props;
   const { t: tr } = useTranslation();
-  const { interaction } = useContext(RoomContext);
+  const { auiMessage } = useContext(RoomContext);
   const [newMsgCount, setNewMsgCount] = useState<number>(0);
   const newMsgCountRef = useRef<number>(0);
   const increaseTimer = useRef<NodeJS.Timer>(); // 节流
@@ -51,10 +52,9 @@ const H5Tabs: React.FC<IH5Tabs> = (props: IH5Tabs) => {
   }, []);
 
   useEffect(() => {
-    if (!interaction) {
+    if (!auiMessage) {
       return;
     }
-    const { InteractionEventNames } = window.AliyunInteraction;
 
     const handler = (eventData: any) => {
       const { type } = eventData || {};
@@ -64,17 +64,18 @@ const H5Tabs: React.FC<IH5Tabs> = (props: IH5Tabs) => {
     };
 
     if (tabs.includes(ChatTabKey) && value !== ChatTabKey) {
-      interaction.on(InteractionEventNames.Message, handler);
+      // 收type为10001的消息，只需订阅onMessageReceived
+      auiMessage.addListener(AUIMessageEvents.onMessageReceived, handler);
     } else {
-      interaction.remove(InteractionEventNames.Message, handler);
+      auiMessage.removeListener(AUIMessageEvents.onMessageReceived, handler);
       newMsgCountRef.current = 0;
       setNewMsgCount(0);
     }
 
     return () => {
-      interaction.remove(InteractionEventNames.Message, handler);
+      auiMessage.removeListener(AUIMessageEvents.onMessageReceived, handler);
     };
-  }, [interaction, tabs, value]);
+  }, [auiMessage, tabs, value]);
 
   return (
     <div className={styles.h5tabs}>

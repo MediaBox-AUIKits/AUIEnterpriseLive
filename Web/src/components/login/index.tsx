@@ -2,8 +2,8 @@
  * 本组件为测试逻辑，userId 与输入的昵称一样，方便测试
  * 实际生产环境的登录由您自行实现
 */
-import { useState, useMemo, useEffect } from 'react';
-import { Toast, Input, Button, Dialog, Radio } from 'antd-mobile';
+import { useState, useMemo } from 'react';
+import { Toast, Input, Button, Dialog } from 'antd-mobile';
 import { useTranslation } from 'react-i18next';
 import services from '@/services';
 import styles from './index.less';

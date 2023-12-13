@@ -26,16 +26,27 @@ export default {
   },
 }
 ```
-#### 方式2：在代码中写入 Appserver 服务域名
-若前端页面需要与 Appserver 服务部署在不同域名路径下时，就无法使用 proxy 解决，这时请参考下方伪代码修改 src -> services -> base.ts 文件，配置对应的 Appserver 服务域名。另外，页面、接口在不同环境下时 Appserver 服务端需要开启跨域设置，当前开源的 Appserver 服务已开启。
+##### 方式2：在代码中写入 Appserver 服务域名
+若前端页面需要与 Appserver 服务部署在不同域名路径下时，就无法使用 proxy 解决，这时请修改 src/config.ts 文件，在 origin 字段内配置对应的 Appserver 服务域名。另外，页面、接口在不同环境下时 Appserver 服务端需要开启跨域设置，当前开源的 Appserver 服务已开启。
 ```typescript
-// 配置 APPServer 服务域名，结尾不需要有 /
-export const ServicesOrigin = '您的 APPServer 服务域名';
-
-// 配置api接口路径前缀，若修改了 APPServer 接口的路径，请对应修改这里
-export const ApiPrefixPath = '/api/v1/live/';
+const config: IConfig = {
+  // 配置 APPServer
+  appServer: {
+    origin: '', // 配置 APPServer 服务域名，例子: https://xxx.xxx.xxx
+  },
+  imServer: {
+    aliyunIMV1: {
+      enable: false,
+      primary: false,
+    },
+    aliyunIMV2: {
+      enable: true,
+      primary: true,
+    },
+  },
+};
 ```
-若测试环境与线上环境使用的接口域名不一致时，可以根据当前域名来设置 ServicesOrigin 。
+若测试环境与线上环境使用的接口域名不一致时，可以打开 src/services/base.ts 根据当前域名来设置 ServicesOrigin 。
 ```typescript
 export const ServicesOrigin = 
   location.hostname === '页面测试域名' ? 'APPServer 测试域名' : 'APPServer 线上域名';
@@ -80,12 +91,6 @@ export default {
       : '/',
 }
 ```
-
-## 接入其他 React + TypeScript 工程
-若您已有业务 React + TypeScript 工程，希望只接入直播间组件，您可以将 src->components->LiveRoom 文件夹拷贝至您的工程里。
-
-LiveRoom 组件依赖 i18next、react-i18next、throttle-debounce、antd-mobile、react-toastify、@ant-design/icons、classnames 等三方 npm 包，需要您在您的工程里引入
-
 ## 由您实现
 本项目着重直播间模块的开发，其余配套的模块还需要您自行完善才能真正对外服务 C 端用户。
 ### 登录
