@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'AUIEnterpriseLive'
-  s.version          = '2.2.0'
+  s.version          = '2.3.0'
   s.summary          = 'A short description of AUIEnterpriseLive.'
 
 # This description is used to generate tags and improve search results.
@@ -30,7 +30,7 @@ TODO: Add long description of the pod here.
 
   s.ios.deployment_target = '10.0'
   s.static_framework = true
-  s.default_subspecs='AliVCSDK_PremiumLive'
+  s.default_subspecs='AliVCSDK_InteractiveLive'
   s.pod_target_xcconfig = {'GCC_PREPROCESSOR_DEFINITIONS' => '$(inherited) COCOAPODS=1 DISABLE_QUEEN'}
 
   s.subspec 'Live' do |ss|
@@ -43,19 +43,14 @@ TODO: Add long description of the pod here.
     ss.dependency 'SDWebImage'
   end
 
-  s.subspec 'AliVCSDK_Premium' do |ss|
+  s.subspec 'AliVCSDK_Standard' do |ss|
     ss.dependency 'AUIEnterpriseLive/Live'
-    ss.dependency 'AliVCSDK_Premium'
+    ss.dependency 'AliVCSDK_Standard'
   end
 
   s.subspec 'AliVCSDK_InteractiveLive' do |ss|
     ss.dependency 'AUIEnterpriseLive/Live'
     ss.dependency 'AliVCSDK_InteractiveLive'
-  end
-
-  s.subspec 'AliVCSDK_PremiumLive' do |ss|
-    ss.dependency 'AUIEnterpriseLive/Live'
-    ss.dependency 'AliVCSDK_PremiumLive'
   end
 
 end

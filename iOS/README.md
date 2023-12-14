@@ -39,6 +39,7 @@ AUI Kits 互动直播场景（横屏样式）集成工具是阿里云针对企�
 - 在控制台上申请试用License，开通直播推流、播放、美颜等能力，获取License文件和LicenseKey，如果已开通License直接进入下一步
 - 把License文件放到Example/AUILiveDemo/目录下，并修改文件名为“license.crt”
 - 把“LicenseKey”（如果没有，请在控制台拷贝），打开“AUILiveDemo/Info.plist”，填写到字段“AlivcLicenseKey”的值中
+- 在XCode中打开AUIEnterpriseLiveManager.m文件，修改kLiveServiceDomainString的值为你真实的AppServer地址
 - 编译运行
 
 
@@ -48,7 +49,7 @@ AUI Kits 互动直播场景（横屏样式）集成工具是阿里云针对企�
 ### 导入源码
 - 导入AUIEnterpriseLive：仓库代码下载后，拷贝iOS文件夹到你的APP代码目录下，改名为AUIEnterpriseLive，与你的Podfile文件在同一层级，可以删除里面的Example目录
 - 修改你的Podfile，引入：
-  - AliVCSDK_PremiumLive：适用于互动直播的音视频终端SDK，也可以使用AliVCSDK_Premium，参考[快速集成](https://help.aliyun.com/document_detail/2412571.html)
+  - AliVCSDK_InteractiveLive：适用于互动直播的音视频终端SDK，也可以使用AliVCSDK_Standard，参考[快速集成](https://help.aliyun.com/document_detail/2412571.html)
   - AUIFoundation：基础UI组件
   - AUIMessage：互动消息组件
   - AUIEnterpriseLive：互动直播横屏样式UI组件源码，根据自身的业务，有需要可以对组件代码进行修改
@@ -59,8 +60,8 @@ platform :ios, '10.0'
 
 target '你的App target' do
     # 根据自己的业务场景，集成合适的音视频终端SDK
-    # 如果你的APP中还需要频短视频编辑功能，可以使用音视频终端全功能SDK（AliVCSDK_Premium），可以把本文件中的所有AliVCSDK_PremiumLive替换为AliVCSDK_Premium
-    pod 'AliVCSDK_PremiumLive', '~> 6.6.0'
+    # 如果你的APP中还需要频短视频编辑功能，可以使用音视频终端全功能SDK（AliVCSDK_Standard），可以把本文件中的所有AliVCSDK_InteractiveLive替换为AliVCSDK_Standard
+    pod 'AliVCSDK_InteractiveLive', '~> 6.7.0'
     
     # 基础UI组件
     pod 'AUIFoundation/All', :path => "./AUIEnterpriseLive/AUIBaseKits/AUIFoundation/"
@@ -68,8 +69,8 @@ target '你的App target' do
     # 互动消息组件
     pod 'AUIMessage/AliVCIM', :path => "./AUIEnterpriseLive/AUIBaseKits/AUIMessage/"
     
-    # 互动直播横屏样式UI组件，如果终端SDK使用的是AliVCSDK_Premium，需要AliVCSDK_PremiumLive替换为AliVCSDK_Premium
-    pod 'AUIEnterpriseLive/AliVCSDK_PremiumLive',  :path => "./AUIEnterpriseLive/"
+    # 互动直播横屏样式UI组件，如果终端SDK使用的是AliVCSDK_Standard，需要AliVCSDK_InteractiveLive替换为AliVCSDK_Standard
+    pod 'AUIEnterpriseLive/AliVCSDK_InteractiveLive',  :path => "./AUIEnterpriseLive/"
 
 end
 ```
