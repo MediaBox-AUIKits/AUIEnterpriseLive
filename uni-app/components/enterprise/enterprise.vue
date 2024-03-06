@@ -23,6 +23,7 @@
 			<chat-panel
 				v-show="activeTab === 'chat'"
 				:visible="activeTab === 'chat'"
+				:joined-group-id="joinedGroupId"
 			/>
 			<char-controls
 				:allow-chat="activeTab === 'chat'"

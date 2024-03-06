@@ -53,24 +53,26 @@ export function randomNum(max, min) {
 export function throttle(fn, wait, options = {}) {
     let callback = fn;
     let timerId = null;
+    let lastExecTime = 0;
+    let currentTime = Date.now();
+	  let leading = typeof options.noLeading === 'boolean' ? !options.noLeading : true;
 	
-	let firstInvoke = typeof options.noLeading === 'boolean' ? !options.noLeading : true;
-	
-	let args = undefined;
+	  let args = undefined;
 
     function throttled() {
         let context = this;
         args = arguments;
-		
-		// 如果是第一次触发，直接执行
-		if (firstInvoke) {
-		    callback.apply(context, args);
-		    firstInvoke = false;
-		    return ;
-		}
+        currentTime = Date.now();
 
         // 如果定时器已存在，直接返回
         if (timerId) {
+            return ;
+        }
+		
+        // 如果是第一次触发，直接执行
+        if (leading && currentTime - lastExecTime > wait) {
+            callback.apply(context, args);
+            lastExecTime = currentTime;
             return ;
         }
 
@@ -78,6 +80,7 @@ export function throttle(fn, wait, options = {}) {
             // 注意这里 将 clearTimeout 放到 内部来执行了
             clearTimeout(timerId);
             timerId = null;
+            lastExecTime = currentTime;
             callback.apply(context, args);
         }, wait);
     }

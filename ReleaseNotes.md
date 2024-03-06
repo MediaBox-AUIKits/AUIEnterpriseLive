@@ -38,3 +38,7 @@
 ## v2.3.0
 发布时间：2023-12-14
 * Android&iOS：升级MediaBoxSDK到v6.7.0，默认使用AliVCSDK_InteractiveLive
+
+## v2.3.1
+发布时间：2024-03-05
+* uni-app：升级使用新版互动消息SDK等

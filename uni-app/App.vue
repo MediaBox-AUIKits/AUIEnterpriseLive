@@ -1,8 +1,8 @@
 <script>
-	import { InteractionEngine } from  '@/utils/aliyun-interaction-sdk.mini.esm.js';
+	import { ImEngine } from  '@/utils/Interaction.js';
 	export default {
 		globalData: {
-			interaction: InteractionEngine.create(),
+			interaction: ImEngine.createEngine(),
 		},
 		
 		onLaunch() {

@@ -35,14 +35,33 @@ const skinLayoutPlayback = [
 const MAX_RETRY_COUNT = 5;
 // 重试时间间隔
 const RETRY_INTERVAL = 2000;
+// 默认 poster 地址
+let posterUrl = '';
+
+// #ifdef H5
+
+// 生成一个小透明poster，解决安卓 webview 会给 video 加上默认图的问题
+const canvas  = document.createElement('canvas');
+canvas.width = 20;
+canvas.height = 20;
+posterUrl = canvas.toDataURL('image/png');
+
+(window as any).Aliplayer.__logCallback__ = function (event: any) {
+	event.extra = JSON.stringify({
+		scene: 'AUIEnterpriseLive',
+		platform: 'uniapp H5',
+	});
+}
+// #endif
 
 export class H5Player {
   private player: any;
   private source?: string;
   private retryCount = 0;
+  private timer: number = 0;
   
   private handleVisibilityChange() {
-	  console.log('change---->', document.visibilityState);
+	  // console.log('change---->', document.visibilityState);
 	  if (document.visibilityState === "visible") {
 	    this.player.play();
 	  } else {
@@ -71,6 +90,7 @@ export class H5Player {
       preload: true,
       controlBarVisibility: 'never',
       useH5Prism: true,
+      extraInfo: { poster: posterUrl },
       ...config,
     };
 
@@ -89,8 +109,11 @@ export class H5Player {
       console.log('player error', e);
       // 处理 4004 逻辑（一般是因为 HLS 有延时，推流已经开始但播流还拉不到），自动重试
       if (e.paramData.error_code === 4004 && this.retryCount < MAX_RETRY_COUNT) {
-        window.setTimeout(() => {
+		    if (this.timer) return;
+		
+        this.timer = window.setTimeout(() => {
           this.retryCount++;
+		      this.timer = 0;
           this.player.loadByUrl(this.source || '', 0, true, true)
         }, RETRY_INTERVAL);
       }
@@ -109,6 +132,7 @@ export class H5Player {
       useH5Prism: true,
       keyShortCuts: true,
       keyFastForwardStep: 5,
+      extraInfo: { poster: posterUrl },
       ...config,
     };
 
@@ -143,8 +167,8 @@ export class H5Player {
   public destroy() {
     if (this.player) {
 		this.unlistenVisibility();
-      this.player.dispose();
-      this.player = null;
+		this.player.dispose();
+		this.player = null;
     }
   }
 }

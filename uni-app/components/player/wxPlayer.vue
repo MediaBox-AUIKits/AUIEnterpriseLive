@@ -13,7 +13,7 @@
 			@controlstoggle="controlstoggle"
 			@error="handleVideoError"
 		></video>
-		
+
 		<live-player
 			v-if="liveUrl"
 			:src="liveUrl"

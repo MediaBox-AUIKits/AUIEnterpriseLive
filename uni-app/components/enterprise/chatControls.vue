@@ -75,8 +75,6 @@
 			chatPlaceholder() {
 				if (this.roomInfo.groupMuted) {
 					return '全员禁言中';
-				} else if (this.roomInfo.selfMuted) {
-					return '您已被禁言';
 				}
 				if (!this.allowChat) {
 					return ' '; // 真机模拟时发现不展示输入框
@@ -84,7 +82,7 @@
 				return '和主播说点什么';
 			},
 			chatInputDisbale() {
-				return !this.allowChat || this.sending || this.roomInfo.groupMuted || this.roomInfo.selfMuted;
+				return !this.allowChat || this.sending || !!this.roomInfo.groupMuted;
 			}
 		},
 		
@@ -110,8 +108,7 @@
 					!content ||
 					!this.joinedGroupId ||
 					this.sending ||
-					this.roomInfo.groupMuted ||
-					this.roomInfo.selfMuted
+					this.roomInfo.groupMuted
 				) {
 					return;
 				}
@@ -122,7 +119,8 @@
 				    data: JSON.stringify({ content }),
 				};
 				this.interaction
-					.sendMessageToGroup(options)
+					?.getMessageManager()
+					?.sendGroupMessage(options)
 					.then(() => {
 						console.log('发送成功');
 						this.text = '';
@@ -142,20 +140,10 @@
 			},
 			// 点赞
 			sendLike() {
-				const count = this.likeCount;
-				const options = {
-				    groupId: this.joinedGroupId,
-				    count: count,
-				    broadCastType: 2,
-				};
-				this.likeCount = 0;
-				this.interaction.sendLike(options)
-					.then(() => {
-				        console.log('sendLike 成功', count);
-				    }).catch(() => {
-				        // 若是失败了，加回 count
-				        this.likeCount += count;
-				    });
+				// 自行实现
+				uni.showToast({
+					title: '点赞逻辑请自行实现',
+				});
 			},
 			handleShare() {
 				uni.showToast({
