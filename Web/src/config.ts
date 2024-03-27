@@ -15,10 +15,6 @@ const config: IConfig = {
     origin: '', // 配置 APPServer 服务域名，例子: https://xxx.xxx.xxx
   },
   imServer: {
-    aliyunIMV1: {
-      enable: false,
-      primary: false,
-    },
     aliyunIMV2: {
       enable: true,
       primary: true,

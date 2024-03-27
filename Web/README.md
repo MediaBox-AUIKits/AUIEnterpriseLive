@@ -26,7 +26,7 @@ export default {
   },
 }
 ```
-##### 方式2：在代码中写入 Appserver 服务域名
+#### 方式2：在代码中写入 Appserver 服务域名
 若前端页面需要与 Appserver 服务部署在不同域名路径下时，就无法使用 proxy 解决，这时请修改 src/config.ts 文件，在 origin 字段内配置对应的 Appserver 服务域名。另外，页面、接口在不同环境下时 Appserver 服务端需要开启跨域设置，当前开源的 Appserver 服务已开启。
 ```typescript
 const config: IConfig = {
@@ -35,10 +35,6 @@ const config: IConfig = {
     origin: '', // 配置 APPServer 服务域名，例子: https://xxx.xxx.xxx
   },
   imServer: {
-    aliyunIMV1: {
-      enable: false,
-      primary: false,
-    },
     aliyunIMV2: {
       enable: true,
       primary: true,
@@ -103,7 +99,9 @@ export default {
 plugin.ts 中引入 VConsole SDK ，用于在移动端测试，目前默认不会开启，当 url 中包含 vconsole=1 的参数时才会开启。
 ### AliPlayer
 plugin.ts 中引入 AliPlayer SDK，用于在直播间中播放直播流，详细内容请至 [官网](https://help.aliyun.com/document_detail/125548.html) 了解。
-### aliyun-interaction-sdk
-plugin.ts 中引入了 aliyun-interaction-sdk 用于直播间互动消息的收发，Appserver 所提供的 token 接口会返回互动sdk 认证所需的 token。
+### alivc-im
+plugin.ts 中引入了 alivc-im 用于直播间互动消息的收发，Appserver 所提供的 token 接口会返回互动sdk 认证所需的 token。
 ### axios
 开源的 http 请求 npm 包，用于调用 Appserver 接口，详细文档请至 [官网](https://github.com/axios/axios) 了解。
+### alivc-live-push
+plugin.ts 中引入了 alivc-live-push 用于连麦互动的推拉流，详细内容请至 [官网](https://help.aliyun.com/zh/live/user-guide/web-side-even-wheat-development-guide) 了解。

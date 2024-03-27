@@ -1,4 +1,10 @@
-import React, { useContext, useRef, useMemo, useState, KeyboardEvent } from 'react';
+import React, { 
+  useContext, 
+  useRef, 
+  useMemo, 
+  useState, 
+  KeyboardEvent 
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import { Toast } from 'antd-mobile';
 import Icon from '@ant-design/icons';
@@ -18,7 +24,13 @@ const ChatControls: React.FC<IChatControlsProps> = (props) => {
   const { allowChat, className, heartIconActive, theme = 'dark' } = props;
   const { t: tr } = useTranslation();
   const operationRef = useRef<HTMLDivElement>(null);
-  const { roomState, animeContainerEl, dispatch, sendComment, sendLike } = useContext(RoomContext);
+  const { 
+    roomState, 
+    animeContainerEl, 
+    dispatch, 
+    sendComment, 
+    sendLike,
+  } = useContext(RoomContext);
   const { commentInput, groupMuted, selfMuted } = roomState;
   const [sending, setSending] = useState<boolean>(false);
 
