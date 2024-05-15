@@ -58,15 +58,8 @@ static NSString * const kLiveServiceDomainString = @"你的AppServer域名";
 #endif
 }
 
-- (void)setCurrentUser:(AUIRoomUser *)user {
-    AUIRoomAccount.me.userId = user.userId ?: @"";
-    AUIRoomAccount.me.avatar = user.avatar ?: @"";
-    AUIRoomAccount.me.nickName = user.nickName ?: @"";
-    AUIRoomAccount.me.token = user.token ?: @"";
-}
-
-- (AUIRoomUser *)currentUser {
-    return AUIRoomAccount.me;
+- (void)setMyAccount:(AUIRoomAccount *)account {
+    [AUIRoomAccount.myAccount changedAccount:account];
 }
 
 - (void)login:(void(^)(BOOL success))completedBlock {
