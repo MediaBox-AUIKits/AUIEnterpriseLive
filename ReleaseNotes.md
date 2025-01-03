@@ -46,8 +46,3 @@
 ## v2.3.2
 发布时间：2024-03-25
 * Web：AUI Message升级优化等
-
-## v2.4.0
-发布时间：2024-08-25
-* Android&iOS：升级AliVCSDK_InteractiveLive到v6.14.0，升级AliVCInteractionMessage到1.3.1
-* Android&iOS&Web: 代码优化&修复问题

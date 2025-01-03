@@ -3,11 +3,13 @@ package com.aliyun.enterprise.live;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -16,6 +18,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.alibaba.android.arouter.facade.annotation.Route;
 import com.alivc.auicommon.common.base.callback.Callbacks;
 import com.alivc.auicommon.common.base.log.Logger;
 import com.alivc.auicommon.common.base.util.CollectionUtil;
@@ -26,6 +29,8 @@ import com.aliyun.aliinteraction.uikit.uibase.util.ExStatusBarUtils;
 import com.aliyun.aliinteraction.uikit.uibase.util.LastLiveSp;
 import com.aliyun.aliinteraction.uikit.uibase.util.ViewUtil;
 import com.aliyun.auiappserver.AppServerApi;
+import com.aliyun.auiappserver.AppServerTokenManager;
+import com.aliyun.auiappserver.RetrofitManager;
 import com.aliyun.auiappserver.model.ListLiveRequest;
 import com.aliyun.auiappserver.model.LiveModel;
 import com.aliyun.auipusher.LiveRole;
@@ -40,9 +45,10 @@ import java.util.List;
  * @author puke
  * @version 2021/5/11
  */
-public class RoomListActivity extends AppBaseActivity {
+@Route(path = "/enterprise/roomlist")
+public class ListRoomActivity extends AppBaseActivity {
 
-    private static final String TAG = RoomListActivity.class.getSimpleName();
+    private static final String TAG = ListRoomActivity.class.getSimpleName();
 
     private static final int PAGE_SIZE = 10;
     private ContentLoadingProgressBar loading;
@@ -56,9 +62,9 @@ public class RoomListActivity extends AppBaseActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_room_list);
-        ExStatusBarUtils.setStatusBarColor(this, AppUtil.getColor(R.color.bus_login_status_bar_color));
-
+        setContentView(R.layout.activity_list_room);
+        ExStatusBarUtils.setStatusBarColor(this, AppUtil.getColor(R.color.black_back));
+        ExStatusBarUtils.setStatusBarTextColorBlack(this, false);
         loading = findViewById(R.id.loading);
         backBtn = findViewById(R.id.back_btn);
         backBtn.setOnClickListener(new View.OnClickListener() {
@@ -90,13 +96,13 @@ public class RoomListActivity extends AppBaseActivity {
         adapter = new Adapter();
         recyclerView.setAdapter(adapter);
 
-        notifyRadioChange();
+        initParam();
 
         refreshLayout = findViewById(R.id.refresh_layout);
         refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                RoomListActivity.this.loadData(false);
+                ListRoomActivity.this.loadData(false);
             }
         });
 
@@ -105,11 +111,38 @@ public class RoomListActivity extends AppBaseActivity {
                 new Runnable() {
                     @Override
                     public void run() {
-                        Intent intent = new Intent(context, ChooseRoomTypeActivity.class);
+                        Intent intent = new Intent(context, RoomTypeChooseActivity.class);
                         context.startActivity(intent);
                     }
                 }
         );
+    }
+
+    private void initParam() {
+        if (null != getIntent()) {
+            String userId = getIntent().getStringExtra("user_id");
+            if (null == userId || "".equals(userId)) {
+                Log.e("BUGGER", "请求数据valid");
+                notifyRadioChange();
+                return;
+            }
+            Log.e("BUGGER", "请求数据");
+            Const.setUserId(userId);
+            AppServerTokenManager.login(userId, userId, new InteractionCallback<Void>() {
+                @Override
+                public void onSuccess(Void data) {
+                    notifyRadioChange();
+                }
+
+                @Override
+                public void onError(InteractionError interactionError) {
+                    Toast.makeText(ListRoomActivity.this, "请求异常", Toast.LENGTH_SHORT).show();
+                }
+            });
+        } else {
+            Log.e("BUGGER", "请求数据valid");
+            notifyRadioChange();
+        }
     }
 
     /**
@@ -133,7 +166,7 @@ public class RoomListActivity extends AppBaseActivity {
                     lastLiveSp.setLastLiveId(liveId == null ? data : liveId);
                     lastLiveSp.setLastLiveAnchorId(anchorId);
                 } else {
-                    RoomListActivity.this.showToast(errorMsg);
+                    ListRoomActivity.this.showToast(errorMsg);
                 }
             }
         });
@@ -188,7 +221,7 @@ public class RoomListActivity extends AppBaseActivity {
         lastLoginView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                RoomListActivity.this.gotoLivePage(lastLiveId, lastLiveAnchorId);
+                ListRoomActivity.this.gotoLivePage(lastLiveId, lastLiveAnchorId);
             }
         });
 

@@ -106,7 +106,7 @@ public class LiveLoginFragment extends BaseFragment {
                     public void onSuccess(Void data) {
                         loading.hide();
                         Const.setUserId(userId);
-                        Intent intent = new Intent(context, RoomListActivity.class);
+                        Intent intent = new Intent(context, ListRoomActivity.class);
                         if (context != null) {
                             context.startActivity(intent);
                         }

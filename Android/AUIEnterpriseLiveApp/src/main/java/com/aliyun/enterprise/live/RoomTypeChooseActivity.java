@@ -20,7 +20,7 @@ import com.aliyun.aliinteraction.uikit.uibase.util.LastLiveSp;
 import com.aliyun.auipusher.LiveRole;
 import com.aliyun.auipusher.config.AliLiveMediaStreamOptions;
 
-public class ChooseRoomTypeActivity extends AppBaseActivity {
+public class RoomTypeChooseActivity extends AppBaseActivity {
 
     private EditText liveroomTitleEdt;//直播间title
 
@@ -45,7 +45,7 @@ public class ChooseRoomTypeActivity extends AppBaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ExStatusBarUtils.setStatusBarColor(this, AppUtil.getColor(R.color.bus_login_status_bar_color));
-        setContentView(R.layout.activity_choose_room);
+        setContentView(R.layout.activity_room_choose);
         liveroomTitleEdt = findViewById(R.id.liveroom_title);
         liveroomTitleEdt.addTextChangedListener(new TextWatcher() {
             @Override
@@ -134,7 +134,7 @@ public class ChooseRoomTypeActivity extends AppBaseActivity {
      */
     private void gotoLivePage(final String liveId, final String anchorId) {
         if (TextUtils.isEmpty(liveroomTitleEdt.getText().toString())) {
-            CommonUtil.showToast(ChooseRoomTypeActivity.this, "直播标题不能为空");
+            CommonUtil.showToast(RoomTypeChooseActivity.this, "直播标题不能为空");
             return;
         }
         final LivePrototype.OpenLiveParam param = new LivePrototype.OpenLiveParam();
@@ -152,7 +152,7 @@ public class ChooseRoomTypeActivity extends AppBaseActivity {
                     lastLiveSp.setLastLiveId(liveId == null ? data : liveId);
                     lastLiveSp.setLastLiveAnchorId(anchorId);
                 } else {
-                    ChooseRoomTypeActivity.this.showToast(errorMsg);
+                    RoomTypeChooseActivity.this.showToast(errorMsg);
                 }
             }
         });

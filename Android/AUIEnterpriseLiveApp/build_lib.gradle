@@ -1,0 +1,48 @@
+apply plugin: 'com.android.library'
+apply from: './dependencies.gradle'
+
+// Cannot make method static, @runchen.brc
+String getEnvValue(key, defValue) {
+    def val = System.getProperty(key)
+    if (null != val) {
+        return val
+    }
+    val = System.getenv(key)
+    if (null != val) {
+        return val
+    }
+    return defValue
+}
+
+ext.BUILD_IM_TYPE = getEnvValue("BUILD_IM_TYPE", 'internal')
+
+android {
+    compileSdkVersion 33
+    buildToolsVersion "33.0.2"
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 33
+
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a'
+        }
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [AROUTER_MODULE_NAME: 'enterprise']
+            }
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    lintOptions {
+        abortOnError false
+        checkReleaseBuilds false
+        disable 'MissingTranslation'
+    }
+}

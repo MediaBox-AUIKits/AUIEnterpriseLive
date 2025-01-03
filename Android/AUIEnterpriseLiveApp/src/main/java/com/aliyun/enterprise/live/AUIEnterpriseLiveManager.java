@@ -2,7 +2,6 @@ package com.aliyun.enterprise.live;
 
 import com.aliyun.auiappserver.RetrofitManager;
 import com.aliyun.common.AlivcBase;
-import com.aliyun.enterprise.live.BuildConfig;
 
 /**
  * @author baorunchen
@@ -13,8 +12,6 @@ import com.aliyun.enterprise.live.BuildConfig;
 public class AUIEnterpriseLiveManager {
 
     private static final String TAG_PROJECT_ENTERPRISE_LIVE = "aui-live-enterprise";
-
-    private static final String BUILD_IM_TYPE_RONGCLOUD = "rongcloud";
 
     private AUIEnterpriseLiveManager() {
     }
@@ -28,10 +25,6 @@ public class AUIEnterpriseLiveManager {
     }
 
     private static void setupAppServerUrl() {
-        if (BUILD_IM_TYPE_RONGCLOUD.equals(BuildConfig.BUILD_IM_TYPE)) {
-            RetrofitManager.setAppServerUrl(RetrofitManager.Const.APP_SERVER_URL_RONG_CLOUD);
-        } else {
-            RetrofitManager.setAppServerUrl(RetrofitManager.Const.APP_SERVER_URL_ALIVC);
-        }
+        RetrofitManager.setAppServerUrl(RetrofitManager.Const.APP_SERVER_URL_DEFAULT);
     }
 }
